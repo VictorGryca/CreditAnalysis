@@ -34,6 +34,12 @@ export default function ImovelDetalhes() {
     return telefone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3')
   }
 
+  // Converter UTC para horário de São Paulo
+  const formatarDataHoraBR = (dataUTC: string) => {
+    const data = new Date(dataUTC + 'Z') // Garante que seja interpretada como UTC
+    return data.toLocaleString('pt-BR')
+  }
+
   useEffect(() => {
     checkUser()
     loadImovel()
@@ -120,7 +126,7 @@ export default function ImovelDetalhes() {
               <p><strong>Telefone:</strong> {formatarTelefone(form.telefone)}</p>
               <p><strong>Email:</strong> {form.email}</p>
               <p style={{ color: '#666', fontSize: '12px' }}>
-                Enviado em: {new Date(form.created_at).toLocaleString('pt-BR')}
+                Enviado em: {formatarDataHoraBR(form.created_at)}
               </p>
             </div>
           ))

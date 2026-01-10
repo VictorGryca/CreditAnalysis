@@ -13,6 +13,12 @@ export default function Dashboard() {
   const [novoEndereco, setNovoEndereco] = useState('')
   const navigate = useNavigate()
 
+  // Converter UTC para horário de São Paulo
+  const formatarDataBR = (dataUTC: string) => {
+    const data = new Date(dataUTC + 'Z') // Garante que seja interpretada como UTC
+    return data.toLocaleDateString('pt-BR')
+  }
+
   useEffect(() => {
     checkUser()
     loadImoveis()
@@ -96,7 +102,7 @@ export default function Dashboard() {
             >
               <strong>{imovel.endereco}</strong>
               <p style={{ color: '#666', fontSize: '14px', marginTop: '5px' }}>
-                Criado em: {new Date(imovel.created_at).toLocaleDateString('pt-BR')}
+                Criado em: {formatarDataBR(imovel.created_at)}
               </p>
             </div>
           ))
