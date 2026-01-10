@@ -19,8 +19,9 @@ export default function Dashboard() {
   }, [])
 
   const checkUser = async () => {
-    const { data } = await supabase.auth.getUser()
-    if (!data.user) {
+    // Verificar se tem admin logado no localStorage
+    const adminId = localStorage.getItem('adminId')
+    if (!adminId) {
       navigate('/')
     }
   }
@@ -54,7 +55,10 @@ export default function Dashboard() {
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    // Limpar dados do localStorage
+    localStorage.removeItem('adminId')
+    localStorage.removeItem('adminEmail')
+    localStorage.removeItem('adminNome')
     navigate('/')
   }
 

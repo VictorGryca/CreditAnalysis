@@ -21,6 +21,19 @@ export default function ImovelDetalhes() {
 
   const linkPublico = `${window.location.origin}/preencher/${id}`
 
+  // Função para formatar CPF na exibição
+  const formatarCPF = (cpf: string) => {
+    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+  }
+
+  // Função para formatar telefone na exibição
+  const formatarTelefone = (telefone: string) => {
+    if (telefone.length === 11) {
+      return telefone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+    }
+    return telefone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3')
+  }
+
   useEffect(() => {
     checkUser()
     loadImovel()
@@ -28,8 +41,9 @@ export default function ImovelDetalhes() {
   }, [])
 
   const checkUser = async () => {
-    const { data } = await supabase.auth.getUser()
-    if (!data.user) {
+    // Verificar se tem admin logado no localStorage
+    const adminId = localStorage.getItem('adminId')
+    if (!adminId) {
       navigate('/')
     }
   }
@@ -80,9 +94,17 @@ export default function ImovelDetalhes() {
         <div className="link-box">
           <h3>Link para o Inquilino Preencher:</h3>
           <p style={{ margin: '10px 0', fontSize: '14px' }}>{linkPublico}</p>
-          <button onClick={copiarLink} style={{ width: 'auto' }}>
-            {linkCopiado ? '✓ Copiado!' : 'Copiar Link'}
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={copiarLink} style={{ width: 'auto', flex: 1 }}>
+              {linkCopiado ? '✓ Copiado!' : 'Copiar Link'}
+            </button>
+            <button 
+              onClick={() => window.open(linkPublico, '_blank')} 
+              style={{ width: 'auto', flex: 1, backgroundColor: '#28a745' }}
+            >
+              Abrir Formulário
+            </button>
+          </div>
         </div>
 
         <h2 style={{ marginTop: '30px' }}>Formulários Recebidos ({formularios.length})</h2>
@@ -93,9 +115,9 @@ export default function ImovelDetalhes() {
           formularios.map((form) => (
             <div key={form.id} className="formulario-item">
               <p><strong>Nome:</strong> {form.nome_completo}</p>
-              <p><strong>CPF:</strong> {form.cpf}</p>
-              <p><strong>Renda Mensal:</strong> R$ {form.renda_mensal.toFixed(2)}</p>
-              <p><strong>Telefone:</strong> {form.telefone}</p>
+              <p><strong>CPF:</strong> {formatarCPF(form.cpf)}</p>
+              <p><strong>Renda Mensal:</strong> R$ {form.renda_mensal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p><strong>Telefone:</strong> {formatarTelefone(form.telefone)}</p>
               <p><strong>Email:</strong> {form.email}</p>
               <p style={{ color: '#666', fontSize: '12px' }}>
                 Enviado em: {new Date(form.created_at).toLocaleString('pt-BR')}
