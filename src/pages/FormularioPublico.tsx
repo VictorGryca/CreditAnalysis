@@ -10,7 +10,7 @@ export default function FormularioPublico() {
     cpf: '',
     renda_mensal: '',
     telefone: '',
-    email: '',
+      email: '',
   })
 
   // Função para formatar CPF: 000.000.000-00
@@ -75,7 +75,69 @@ export default function FormularioPublico() {
     if (error) {
       alert('Erro ao enviar formulário: ' + error.message)
     } else {
+      // Enviar emails (não bloqueia o fluxo)
+      enviarEmails(formData.nome_completo, formData.email, rendaDecimal)
       setEnviado(true)
+    }
+  }
+
+  // Função para enviar emails (confirmação + notificação)
+  const enviarEmails = async (nome: string, emailInquilino: string, renda: number) => {
+    const apiUrl = import.meta.env.VITE_EMAIL_API_URL
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL
+
+    console.log('🔧 Debug - API URL:', apiUrl)
+    console.log('🔧 Debug - Admin Email:', adminEmail)
+
+    if (!apiUrl || !adminEmail) {
+      console.error('❌ Variáveis de ambiente não configuradas!')
+      return
+    }
+
+    try {
+      // 1. Email de confirmação para o inquilino
+      await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: emailInquilino,
+          subject: 'Formulário Recebido - Análise de Crédito',
+          html: `
+            <h2>Olá ${nome}!</h2>
+            <p>Recebemos seu formulário de análise de crédito com sucesso.</p>
+            <p>Entraremos em contato em breve com o resultado da análise.</p>
+            <br>
+            <p><strong>Dados enviados:</strong></p>
+            <ul>
+              <li>Nome: ${nome}</li>
+              <li>Renda Mensal: R$ ${renda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</li>
+            </ul>
+            <br>
+            <p>Atenciosamente,<br>Equipe de Análise de Crédito</p>
+          `
+        })
+      })
+
+      // 2. Email de notificação para o admin
+      await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: adminEmail,
+          subject: `Novo Formulário - ${nome}`,
+          html: `
+            <h2>Novo Formulário Recebido!</h2>
+            <p><strong>Nome:</strong> ${nome}</p>
+            <p><strong>Email:</strong> ${emailInquilino}</p>
+            <p><strong>Renda:</strong> R$ ${renda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+            <br>
+            <p>Acesse o sistema para ver os detalhes completos.</p>
+          `
+        })
+      })
+    } catch (error) {
+      console.error('Erro ao enviar emails:', error)
+      // Não bloqueia o fluxo se o email falhar
     }
   }
 
