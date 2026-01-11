@@ -2,6 +2,23 @@
 const nodemailer = require('nodemailer');
 
 exports.handler = async (event) => {
+  // Headers CORS para todas as respostas
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+    'Content-Type': 'application/json'
+  };
+
+  // Responder ao preflight OPTIONS
+  if (event.requestContext?.http?.method === 'OPTIONS' || event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({ message: 'OK' })
+    };
+  }
+
   try {
     // Parse do body (vem do frontend)
     const body = JSON.parse(event.body || '{}');
@@ -11,10 +28,7 @@ exports.handler = async (event) => {
     if (!to || !subject || (!text && !html)) {
       return {
         statusCode: 400,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json'
-        },
+        headers: corsHeaders,
         body: JSON.stringify({ 
           error: 'Campos obrigatórios: to, subject, e (text ou html)' 
         })
@@ -48,7 +62,7 @@ exports.handler = async (event) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json'
-      },
+      },corsHeaders,
       body: JSON.stringify({
         message: 'Email enviado com sucesso!',
         messageId: info.messageId
@@ -60,13 +74,7 @@ exports.handler = async (event) => {
     
     return {
       statusCode: 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        error: 'Erro ao enviar email',
-        details: error.message
+      headers: corsHeaders details: error.message
       })
     };
   }
