@@ -59,10 +59,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
-      },corsHeaders,
+      headers: corsHeaders,
       body: JSON.stringify({
         message: 'Email enviado com sucesso!',
         messageId: info.messageId
@@ -74,7 +71,10 @@ exports.handler = async (event) => {
     
     return {
       statusCode: 500,
-      headers: corsHeaders details: error.message
+      headers: corsHeaders,
+      body: JSON.stringify({
+        error: 'Erro ao enviar email',
+        details: error.message
       })
     };
   }
