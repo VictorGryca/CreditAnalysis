@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
+import './aws-config' // Configurar Amplify
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import ImovelDetalhes from './pages/ImovelDetalhes'

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getCurrentUser, signOut } from 'aws-amplify/auth'
 import { supabase } from '../supabaseClient'
 
 interface Imovel {
@@ -25,9 +26,11 @@ export default function Dashboard() {
   }, [])
 
   const checkUser = async () => {
-    // Verificar se tem admin logado no localStorage
-    const adminId = localStorage.getItem('adminId')
-    if (!adminId) {
+    try {
+      await getCurrentUser()
+      // Usuário autenticado!
+    } catch {
+      // Não autenticado, redireciona para login
       navigate('/')
     }
   }
@@ -61,11 +64,12 @@ export default function Dashboard() {
   }
 
   const handleLogout = async () => {
-    // Limpar dados do localStorage
-    localStorage.removeItem('adminId')
-    localStorage.removeItem('adminEmail')
-    localStorage.removeItem('adminNome')
-    navigate('/')
+    try {
+      await signOut()
+      navigate('/')
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error)
+    }
   }
 
   return (

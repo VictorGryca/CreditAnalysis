@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { getCurrentUser } from 'aws-amplify/auth'
 import { supabase } from '../supabaseClient'
 
 interface Formulario {
@@ -47,9 +48,11 @@ export default function ImovelDetalhes() {
   }, [])
 
   const checkUser = async () => {
-    // Verificar se tem admin logado no localStorage
-    const adminId = localStorage.getItem('adminId')
-    if (!adminId) {
+    try {
+      await getCurrentUser()
+      // Usuário autenticado!
+    } catch {
+      // Não autenticado, redireciona para login
       navigate('/')
     }
   }
