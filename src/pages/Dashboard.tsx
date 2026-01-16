@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getCurrentUser, signOut } from 'aws-amplify/auth'
+import { fetchAuthSession, signOut } from 'aws-amplify/auth'
 import { supabase } from '../supabaseClient'
 
 interface Imovel {
@@ -12,6 +12,7 @@ interface Imovel {
 export default function Dashboard() {
   const [imoveis, setImoveis] = useState<Imovel[]>([])
   const [novoEndereco, setNovoEndereco] = useState('')
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const navigate = useNavigate()
 
   // Converter UTC para horário de São Paulo
@@ -21,16 +22,34 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    checkUser()
-    loadImoveis()
+    const initAuth = async () => {
+      await checkUser()
+      if (!isCheckingAuth) {
+        loadImoveis()
+      }
+    }
+    initAuth()
   }, [])
 
   const checkUser = async () => {
     try {
-      await getCurrentUser()
-      // Usuário autenticado!
-    } catch {
-      // Não autenticado, redireciona para login
+      // Aguardar um pouco para o Amplify inicializar
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      const session = await fetchAuthSession({ forceRefresh: false })
+      console.log('Sessão:', session)
+      
+      if (!session.tokens) {
+        console.log('Sem tokens, redirecionando...')
+        navigate('/')
+        return
+      }
+      
+      // Sessão válida!
+      setIsCheckingAuth(false)
+      loadImoveis()
+    } catch (error) {
+      console.error('Erro ao verificar sessão:', error)
       navigate('/')
     }
   }
@@ -74,6 +93,11 @@ export default function Dashboard() {
 
   return (
     <div className="container">
+      {isCheckingAuth ? (
+        <div className="page">
+          <p>Carregando...</p>
+        </div>
+      ) : (
       <div className="page">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1>Dashboard - Imóveis</h1>
@@ -112,6 +136,7 @@ export default function Dashboard() {
           ))
         )}
       </div>
+      )}
     </div>
   )
 }

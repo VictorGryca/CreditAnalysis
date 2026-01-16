@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getCurrentUser } from 'aws-amplify/auth'
+import { fetchAuthSession } from 'aws-amplify/auth'
 import { supabase } from '../supabaseClient'
 
 interface Formulario {
@@ -49,10 +49,13 @@ export default function ImovelDetalhes() {
 
   const checkUser = async () => {
     try {
-      await getCurrentUser()
-      // Usuário autenticado!
-    } catch {
-      // Não autenticado, redireciona para login
+      const session = await fetchAuthSession()
+      if (!session.tokens) {
+        navigate('/')
+      }
+      // Sessão válida, usuário autenticado!
+    } catch (error) {
+      console.error('Erro ao verificar sessão:', error)
       navigate('/')
     }
   }

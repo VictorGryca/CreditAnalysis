@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signIn, confirmSignIn } from 'aws-amplify/auth'
+import { signIn, confirmSignIn, fetchAuthSession, signOut } from 'aws-amplify/auth'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -10,6 +10,24 @@ export default function Login() {
   const [newPassword, setNewPassword] = useState('')
   const [userName, setUserName] = useState('')
   const navigate = useNavigate()
+
+  // Verificar se já está logado ao carregar a página
+  useEffect(() => {
+    checkExistingSession()
+  }, [])
+
+  const checkExistingSession = async () => {
+    try {
+      const session = await fetchAuthSession()
+      if (session.tokens) {
+        console.log('Sessão ativa encontrada, redirecionando...')
+        navigate('/dashboard')
+      }
+    } catch (error) {
+      // Não está logado, tudo bem
+      console.log('Nenhuma sessão ativa')
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,6 +56,18 @@ export default function Login() {
       }
     } catch (error: any) {
       console.error('Erro ao fazer login:', error)
+      
+      // Se já existe usuário logado, fazer logout primeiro
+      if (error.message?.includes('already a signed in user')) {
+        try {
+          await signOut()
+          alert('Sessão anterior encerrada. Tente fazer login novamente.')
+          setLoading(false)
+          return
+        } catch (signOutError) {
+          console.error('Erro ao fazer logout:', signOutError)
+        }
+      }
       
       if (error.name === 'UserNotFoundException') {
         alert('Usuário não encontrado!')
