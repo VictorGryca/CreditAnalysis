@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetchAuthSession, signOut } from 'aws-amplify/auth'
+import { fetchAuthSession, signOut, updatePassword } from 'aws-amplify/auth'
 import { supabase } from '../supabaseClient'
 
 interface Imovel {
@@ -13,6 +13,10 @@ export default function Dashboard() {
   const [imoveis, setImoveis] = useState<Imovel[]>([])
   const [novoEndereco, setNovoEndereco] = useState('')
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [oldPassword, setOldPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const navigate = useNavigate()
 
   // Converter UTC para horário de São Paulo
@@ -91,6 +95,40 @@ export default function Dashboard() {
     }
   }
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (newPassword !== confirmPassword) {
+      alert('As senhas não conferem!')
+      return
+    }
+
+    if (newPassword.length < 8) {
+      alert('A nova senha deve ter pelo menos 8 caracteres!')
+      return
+    }
+
+    try {
+      await updatePassword({
+        oldPassword: oldPassword,
+        newPassword: newPassword
+      })
+      
+      alert('Senha alterada com sucesso!')
+      setShowPasswordModal(false)
+      setOldPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (error: any) {
+      console.error('Erro ao trocar senha:', error)
+      if (error.name === 'NotAuthorizedException') {
+        alert('Senha atual incorreta!')
+      } else {
+        alert('Erro ao trocar senha: ' + error.message)
+      }
+    }
+  }
+
   return (
     <div className="container">
       {isCheckingAuth ? (
@@ -99,11 +137,16 @@ export default function Dashboard() {
         </div>
       ) : (
       <div className="page">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h1>Dashboard - Imóveis</h1>
-          <button onClick={handleLogout} style={{ width: 'auto', padding: '10px 20px' }}>
-            Sair
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={() => setShowPasswordModal(true)} style={{ width: 'auto', padding: '10px 20px', backgroundColor: '#666' }}>
+              Trocar Senha
+            </button>
+            <button onClick={handleLogout} style={{ width: 'auto', padding: '10px 20px' }}>
+              Sair
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleCriarImovel} style={{ marginBottom: '30px' }}>
@@ -134,6 +177,77 @@ export default function Dashboard() {
               </p>
             </div>
           ))
+        )}
+
+        {/* Modal de Trocar Senha */}
+        {showPasswordModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '30px',
+              borderRadius: '8px',
+              maxWidth: '400px',
+              width: '90%'
+            }}>
+              <h2>Trocar Senha</h2>
+              <form onSubmit={handleChangePassword}>
+                <input
+                  type="password"
+                  placeholder="Senha atual"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  required
+                />
+                <input
+                  type="password"
+                  placeholder="Nova senha"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={8}
+                />
+                <small style={{ display: 'block', marginBottom: '15px', color: '#666' }}>
+                  Mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e símbolos
+                </small>
+                <input
+                  type="password"
+                  placeholder="Confirmar nova senha"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={8}
+                />
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  <button type="submit" style={{ flex: 1 }}>
+                    Confirmar
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setShowPasswordModal(false)
+                      setOldPassword('')
+                      setNewPassword('')
+                      setConfirmPassword('')
+                    }}
+                    style={{ flex: 1, backgroundColor: '#ccc' }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
       </div>
       )}

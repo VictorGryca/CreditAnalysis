@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signIn, confirmSignIn, fetchAuthSession, signOut } from 'aws-amplify/auth'
+import { signIn, confirmSignIn, fetchAuthSession, signOut, resetPassword, confirmResetPassword } from 'aws-amplify/auth'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -9,6 +9,10 @@ export default function Login() {
   const [needsNewPassword, setNeedsNewPassword] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [userName, setUserName] = useState('')
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetCode, setResetCode] = useState('')
+  const [resetNewPassword, setResetNewPassword] = useState('')
+  const [resetStep, setResetStep] = useState<'email' | 'code'>('email')
   const navigate = useNavigate()
 
   // Verificar se já está logado ao carregar a página
@@ -110,12 +114,115 @@ export default function Login() {
     }
   }
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      await resetPassword({ username: email })
+      alert('Código de recuperação enviado para seu email!')
+      setResetStep('code')
+    } catch (error: any) {
+      console.error('Erro ao solicitar recuperação:', error)
+      alert('Erro ao solicitar recuperação: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleConfirmReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      await confirmResetPassword({
+        username: email,
+        confirmationCode: resetCode,
+        newPassword: resetNewPassword
+      })
+      
+      alert('Senha recuperada com sucesso! Faça login com a nova senha.')
+      setShowForgotPassword(false)
+      setResetStep('email')
+      setResetCode('')
+      setResetNewPassword('')
+    } catch (error: any) {
+      console.error('Erro ao confirmar recuperação:', error)
+      alert('Erro ao confirmar recuperação: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="container">
       <div className="page">
         <h1>Login - Administrador</h1>
         
-        {!needsNewPassword ? (
+        {showForgotPassword ? (
+          // Formulário de recuperação de senha
+          resetStep === 'email' ? (
+            <form onSubmit={handleForgotPassword}>
+              <p style={{ marginBottom: '15px', color: '#666' }}>
+                Digite seu email para receber o código de recuperação
+              </p>
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <button type="submit" disabled={loading}>
+                {loading ? 'Enviando...' : 'Enviar código'}
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setShowForgotPassword(false)}
+                style={{ marginTop: '10px', backgroundColor: '#ccc' }}
+              >
+                Voltar ao login
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleConfirmReset}>
+              <p style={{ marginBottom: '15px', color: '#666' }}>
+                Digite o código recebido no email e sua nova senha
+              </p>
+              <input
+                type="text"
+                placeholder="Código de recuperação"
+                value={resetCode}
+                onChange={(e) => setResetCode(e.target.value)}
+                required
+              />
+              <input
+                type="password"
+                placeholder="Nova senha"
+                value={resetNewPassword}
+                onChange={(e) => setResetNewPassword(e.target.value)}
+                required
+                minLength={8}
+              />
+              <small style={{ display: 'block', marginBottom: '15px', color: '#666' }}>
+                Mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e símbolos
+              </small>
+              <button type="submit" disabled={loading}>
+                {loading ? 'Confirmando...' : 'Confirmar nova senha'}
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setShowForgotPassword(false)
+                  setResetStep('email')
+                }}
+                style={{ marginTop: '10px', backgroundColor: '#ccc' }}
+              >
+                Cancelar
+              </button>
+            </form>
+          )
+        ) : !needsNewPassword ? (
           <form onSubmit={handleLogin}>
             <input
               type="email"
@@ -133,6 +240,13 @@ export default function Login() {
             />
             <button type="submit" disabled={loading}>
               {loading ? 'Entrando...' : 'Entrar'}
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setShowForgotPassword(true)}
+              style={{ marginTop: '10px', backgroundColor: '#666' }}
+            >
+              Esqueci minha senha
             </button>
           </form>
         ) : (
