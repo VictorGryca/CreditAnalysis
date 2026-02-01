@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import { fetchAuthSession } from 'aws-amplify/auth'
 
 // Credenciais vêm do arquivo .env
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
