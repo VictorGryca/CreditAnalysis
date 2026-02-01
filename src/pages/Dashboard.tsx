@@ -613,6 +613,7 @@ export default function Dashboard() {
                           <select
                             value={req.status}
                             onChange={(e) => mudarStatus(req, e.target.value as StatusRequisicao)}
+                            onClick={(e) => e.stopPropagation()}
                             style={{
                               marginTop: '10px',
                               width: '100%',
