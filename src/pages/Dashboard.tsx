@@ -7,6 +7,11 @@ import { listarRequisicoes, atualizarRequisicao, salvarContrato } from '../utils
 export default function Dashboard() {
   const [requisicoes, setRequisicoes] = useState<RequisicaoCredito[]>([])
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [modalConfirmacao, setModalConfirmacao] = useState<{
+    aberto: boolean
+    requisicao: RequisicaoCredito | null
+    novoStatus: StatusRequisicao | null
+  }>({ aberto: false, requisicao: null, novoStatus: null })
   const navigate = useNavigate()
 
   const colunas: { status: StatusRequisicao, titulo: string, cor: string }[] = [
@@ -16,6 +21,14 @@ export default function Dashboard() {
     { status: 'regular', titulo: 'Regular', cor: '#f59e0b' },
     { status: 'cancelado', titulo: 'Cancelado', cor: '#6b7280' }
   ]
+
+  const statusNomes: Record<StatusRequisicao, string> = {
+    'reprovado': 'Reprovado',
+    'aprovado': 'Aprovado',
+    'em-andamento': 'Em Andamento',
+    'regular': 'Regular',
+    'cancelado': 'Cancelado'
+  }
 
   useEffect(() => {
     checkUser()
@@ -82,14 +95,33 @@ export default function Dashboard() {
     }
   }
 
-  const mudarStatus = async (requisicao: RequisicaoCredito, novoStatus: StatusRequisicao) => {
+  const mudarStatus = (requisicao: RequisicaoCredito, novoStatus: StatusRequisicao) => {
+    if (requisicao.status === novoStatus) return
+    
+    setModalConfirmacao({
+      aberto: true,
+      requisicao,
+      novoStatus
+    })
+  }
+
+  const confirmarMudancaStatus = async () => {
+    const { requisicao, novoStatus } = modalConfirmacao
+    if (!requisicao || !novoStatus) return
+    
     try {
       await atualizarRequisicao(requisicao.id, { status: novoStatus })
       await carregarRequisicoes()
+      setModalConfirmacao({ aberto: false, requisicao: null, novoStatus: null })
     } catch (error) {
       console.error('Erro ao mudar status:', error)
       alert('Erro ao atualizar status')
     }
+  }
+
+  const cancelarMudancaStatus = async () => {
+    setModalConfirmacao({ aberto: false, requisicao: null, novoStatus: null })
+    await carregarRequisicoes()
   }
 
   const handleLogout = async () => {
@@ -114,6 +146,127 @@ export default function Dashboard() {
   return (
     <div className="container">
       <div className="page" style={{ maxWidth: '100%', padding: '20px' }}>
+        {/* Modal de Confirmação */}
+        {modalConfirmacao.aberto && modalConfirmacao.requisicao && modalConfirmacao.novoStatus && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '30px',
+              maxWidth: '500px',
+              width: '90%',
+              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+              animation: 'slideIn 0.2s ease-out'
+            }}>
+              <h2 style={{ 
+                margin: '0 0 20px 0', 
+                fontSize: '22px',
+                color: '#111',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                ⚠️ Confirmar Alteração
+              </h2>
+              
+              <p style={{ fontSize: '16px', color: '#374151', lineHeight: '1.6', marginBottom: '20px' }}>
+                Tem certeza que deseja alterar o status desta requisição?
+              </p>
+
+              <div style={{
+                backgroundColor: '#f9fafb',
+                borderRadius: '8px',
+                padding: '15px',
+                marginBottom: '25px',
+                border: '1px solid #e5e7eb'
+              }}>
+                <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#6b7280' }}>
+                  <strong>CPF:</strong> {modalConfirmacao.requisicao.cpf}
+                </p>
+                <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#6b7280' }}>
+                  <strong>Valor:</strong> {modalConfirmacao.requisicao.valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </p>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '10px',
+                  marginTop: '15px',
+                  fontSize: '15px',
+                  fontWeight: 'bold'
+                }}>
+                  <span style={{ 
+                    padding: '6px 12px', 
+                    borderRadius: '6px', 
+                    backgroundColor: '#e5e7eb',
+                    color: '#374151'
+                  }}>
+                    {statusNomes[modalConfirmacao.requisicao.status]}
+                  </span>
+                  <span style={{ fontSize: '18px' }}>→</span>
+                  <span style={{ 
+                    padding: '6px 12px', 
+                    borderRadius: '6px', 
+                    backgroundColor: colunas.find(c => c.status === modalConfirmacao.novoStatus)?.cor || '#6b7280',
+                    color: 'white'
+                  }}>
+                    {statusNomes[modalConfirmacao.novoStatus]}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={cancelarMudancaStatus}
+                  style={{
+                    padding: '10px 20px',
+                    fontSize: '14px',
+                    backgroundColor: '#e5e7eb',
+                    color: '#374151',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#d1d5db'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmarMudancaStatus}
+                  style={{
+                    padding: '10px 20px',
+                    fontSize: '14px',
+                    backgroundColor: '#2563eb',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
           <h1>📋 Requisições de Crédito</h1>
           <div style={{ display: 'flex', gap: '10px' }}>
