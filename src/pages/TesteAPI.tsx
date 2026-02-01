@@ -16,6 +16,7 @@ interface Decisao {
 
 interface ResultadoFormatado {
   nome?: string
+  numeroResposta?: string
   score?: ScoreModel
   rendaPresumida?: ScoreModel
   limiteParcela?: ScoreModel
@@ -84,6 +85,9 @@ export default function TesteAPI() {
     // Extrair nome do inquilino
     const nome = acerta?.IDENTIFICACAO?.NOME || ''
     
+    // Extrair número da resposta
+    const numeroResposta = bodyData?.['SPCA-XML']?.RESPOSTA?.['NUMERO-RESPOSTA'] || ''
+    
     // Buscar Score (POSITIVO PF - código 115)
     const score = scores.find((s: ScoreModel) => 
       s.CODIGONATUREZAMODELO === '115' || s.CODIGONATUREZAMODELO === 115
@@ -102,7 +106,7 @@ export default function TesteAPI() {
     // Buscar Decisão
     const decisao = acerta?.DECISAO
     
-    return { nome, score, rendaPresumida, limiteParcela, decisao }
+    return { nome, numeroResposta, score, rendaPresumida, limiteParcela, decisao }
   }
 
   const calcularRendaMedia = (textoRenda?: string): number => {
@@ -118,7 +122,7 @@ export default function TesteAPI() {
     return (min + max) / 2
   }
 
-  const salvarResultado = async (aprovado: boolean, nomeInquilino: string) => {
+  const salvarResultado = async (aprovado: boolean, nomeInquilino: string, numeroResposta: string, dadosCompletos: string) => {
     const totalImovel = parseMoeda(aluguel) + parseMoeda(condominio) + parseMoeda(seguro)
     
     try {
@@ -132,6 +136,8 @@ export default function TesteAPI() {
         valorTotal: totalImovel,
         aprovado: aprovado,
         status: aprovado ? 'aprovado' : 'reprovado',
+        numeroResposta: numeroResposta,
+        dadosCompletos: dadosCompletos,
         dataAnalise: new Date().toISOString()
       })
       
@@ -306,7 +312,13 @@ export default function TesteAPI() {
           
           // Salvar resultado automaticamente
           if (!resultado._salvo) {
-            salvarResultado(creditoAprovado, dados.nome || 'Nome não informado')
+            const dadosCompletosString = JSON.stringify(resultadoParsed)
+            salvarResultado(
+              creditoAprovado, 
+              dados.nome || 'Nome não informado',
+              dados.numeroResposta || '',
+              dadosCompletosString
+            )
             resultado._salvo = true
           }
           

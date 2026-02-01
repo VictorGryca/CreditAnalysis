@@ -24,35 +24,62 @@ export const handler = async (event) => {
     console.log('Event recebido:', JSON.stringify(event))
     
     // Parse do body
-    let cpf
+    let cpf, tipoConsulta, numeroResposta
     if (event.body) {
       const parsedBody = JSON.parse(event.body)
       cpf = parsedBody.cpf
+      tipoConsulta = parsedBody.tipoConsulta || 395
+      numeroResposta = parsedBody.numeroResposta
     } else {
       // Pode vir direto no event em alguns casos
       cpf = event.cpf
+      tipoConsulta = event.tipoConsulta || 395
+      numeroResposta = event.numeroResposta
     }
 
-    if (!cpf) {
+    // Validar parâmetros baseado no tipo de consulta
+    if (tipoConsulta === 395) {
+      if (!cpf) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ 
+            error: 'CPF é obrigatório para consulta tipo 395',
+            debug: { hasBody: !!event.body, event: event }
+          })
+        }
+      }
+
+      // Validar formato do CPF (11 dígitos)
+      const cpfLimpo = cpf.replace(/\D/g, '')
+      if (cpfLimpo.length !== 11) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'CPF deve ter 11 dígitos' })
+        }
+      }
+    } else if (tipoConsulta === 648) {
+      if (!numeroResposta) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ 
+            error: 'Número de resposta é obrigatório para consulta tipo 648'
+          })
+        }
+      }
+    } else {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ 
-          error: 'CPF é obrigatório',
-          debug: { hasBody: !!event.body, event: event }
+          error: 'Tipo de consulta inválido. Use 395 ou 648'
         })
       }
     }
 
-    // Validar formato do CPF (11 dígitos)
-    const cpfLimpo = cpf.replace(/\D/g, '')
-    if (cpfLimpo.length !== 11) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'CPF deve ter 11 dígitos' })
-      }
-    }
+    const cpfLimpo = cpf ? cpf.replace(/\D/g, '') : null
 
     // Credenciais da API SCPC (variáveis de ambiente da Lambda)
     const usuario = process.env.SCPC_USER
@@ -75,21 +102,29 @@ export const handler = async (event) => {
     const basicAuth = Buffer.from(`${usuario}:${senha}`).toString('base64')
 
     // Montar body da requisição SCPC
+    const solicitacao = {
+      "S-REGIONAL": parseInt(regional),
+      "S-CODIGO": parseInt(codigo),
+      "S-SENHA": senhaSistema,
+      "S-CONSULTA": tipoConsulta,
+      "S-SOLICITANTE": "Sistema CreditAnalysis"
+    }
+
+    // Adicionar campo específico baseado no tipo de consulta
+    if (tipoConsulta === 395) {
+      solicitacao["S-CPF"] = cpfLimpo
+      console.log('Consultando SCPC (tipo 395) para CPF:', cpfLimpo)
+    } else if (tipoConsulta === 648) {
+      solicitacao["S-NUMERO-RESPOSTA"] = numeroResposta
+      console.log('Consultando SCPC (tipo 648) para número:', numeroResposta)
+    }
+
     const scpcBody = {
       "SPCA-XML": {
         "VERSAO": "14042025",
-        "SOLICITACAO": {
-          "S-REGIONAL": parseInt(regional),
-          "S-CODIGO": parseInt(codigo),
-          "S-SENHA": senhaSistema,
-          "S-CONSULTA": 353,
-          "S-SOLICITANTE": "Sistema CreditAnalysis",
-          "S-CPF": cpfLimpo // String para preservar "0" inicial
-        }
+        "SOLICITACAO": solicitacao
       }
     }
-
-    console.log('Consultando SCPC para CPF:', cpfLimpo)
 
     // Fazer requisição para API SCPC (servidor → servidor, SEM CORS!)
     const response = await fetch('https://api.scpc.inf.br/consulta', {

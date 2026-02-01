@@ -16,6 +16,10 @@ export default function Dashboard() {
     aberto: boolean
     mensagem: string
   }>({ aberto: false, mensagem: '' })
+  const [modalDetalhes, setModalDetalhes] = useState<{
+    aberto: boolean
+    requisicao: RequisicaoCredito | null
+  }>({ aberto: false, requisicao: null })
   const [draggedItem, setDraggedItem] = useState<RequisicaoCredito | null>(null)
   const [buscaPorColuna, setBuscaPorColuna] = useState<Record<StatusRequisicao, string>>({
     'reprovado': '',
@@ -542,16 +546,19 @@ export default function Dashboard() {
                         key={req.id}
                         draggable
                         onDragStart={() => handleDragStart(req)}
+                        onClick={() => setModalDetalhes({ aberto: true, requisicao: req })}
                         style={{
                           backgroundColor: 'white',
                           border: `2px solid ${coluna.cor}`,
                           borderRadius: '8px',
                           padding: '12px',
                           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                          cursor: 'grab',
+                          cursor: 'pointer',
                           opacity: draggedItem?.id === req.id ? 0.5 : 1,
-                          transition: 'opacity 0.2s'
+                          transition: 'opacity 0.2s, transform 0.2s',
                         }}
+                        onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                        onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                       >
                         {req.aprovacaoManual && (
                           <div style={{
@@ -632,6 +639,238 @@ export default function Dashboard() {
             })}
           </div>
         )}
+
+        {/* Modal de Detalhes */}
+        {modalDetalhes.aberto && modalDetalhes.requisicao && (() => {
+          const req = modalDetalhes.requisicao
+          let dadosParsed: any = null
+          
+          if (req.dadosCompletos) {
+            try {
+              dadosParsed = JSON.parse(req.dadosCompletos)
+            } catch (e) {
+              console.error('Erro ao fazer parse dos dados:', e)
+            }
+          }
+
+          const bodyData = dadosParsed?.body || dadosParsed
+          const acerta = bodyData?.['SPCA-XML']?.RESPOSTA?.ACERTA
+          const scores = acerta?.['SCORE-CLASSIFICACAO-VARIOS-MODELOS'] || []
+          
+          const score = scores.find((s: any) => s.CODIGONATUREZAMODELO === '115' || s.CODIGONATUREZAMODELO === 115)
+          const rendaPresumida = scores.find((s: any) => s.CODIGONATUREZAMODELO === '116' || s.CODIGONATUREZAMODELO === 116)
+          const limiteParcela = scores.find((s: any) => s.CODIGONATUREZAMODELO === '109' || s.CODIGONATUREZAMODELO === 109)
+          const decisao = acerta?.DECISAO
+
+          return (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px'
+            }}>
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '12px',
+                padding: '30px',
+                maxWidth: '700px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflow: 'auto',
+                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <h2 style={{ margin: 0, color: '#1f2937' }}>📊 Detalhes da Análise</h2>
+                  <button
+                    onClick={() => setModalDetalhes({ aberto: false, requisicao: null })}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '24px',
+                      cursor: 'pointer',
+                      color: '#6b7280',
+                      padding: '0',
+                      width: '32px',
+                      height: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '4px'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+                  <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', color: '#374151' }}>{req.nome}</h3>
+                  <p style={{ margin: '5px 0', fontSize: '14px', color: '#6b7280' }}>CPF: {req.cpf}</p>
+                  <p style={{ margin: '5px 0', fontSize: '14px', color: '#6b7280' }}>
+                    Data da Análise: {new Date(req.dataAnalise).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                  <p style={{ margin: '5px 0', fontSize: '14px', color: '#6b7280' }}>
+                    Valor Total: {req.valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </p>
+                  {req.numeroResposta && (
+                    <p style={{ margin: '5px 0', fontSize: '12px', color: '#9ca3af' }}>
+                      Nº Resposta: {req.numeroResposta}
+                    </p>
+                  )}
+                </div>
+
+                {!dadosParsed ? (
+                  <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+                    ℹ️ Dados completos não disponíveis para esta requisição
+                  </div>
+                ) : (
+                  <>
+                    {/* Score Card */}
+                    {score && (
+                      <div style={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        padding: '20px',
+                        marginBottom: '15px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                      }}>
+                        <h3 style={{ color: '#1f2937', marginBottom: '10px' }}>
+                          📊 {score.DESCRICAONATUREZA}
+                        </h3>
+                        <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                          <p><strong>Score:</strong> {score.PROBABILIDADE}</p>
+                          <p><strong>Classificação:</strong> {score.TEXTO}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Renda Presumida Card */}
+                    {rendaPresumida && (
+                      <div style={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        padding: '20px',
+                        marginBottom: '15px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                      }}>
+                        <h3 style={{ color: '#1f2937', marginBottom: '10px' }}>
+                          💰 {rendaPresumida.DESCRICAONATUREZA}
+                        </h3>
+                        <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                          <p><strong>Faixa de Renda:</strong> {rendaPresumida.TEXTO}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Limite de Parcela Card */}
+                    {limiteParcela && (
+                      <div style={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        padding: '20px',
+                        marginBottom: '15px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                      }}>
+                        <h3 style={{ color: '#1f2937', marginBottom: '10px' }}>
+                          💳 {limiteParcela.DESCRICAONATUREZA}
+                        </h3>
+                        <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                          <p><strong>Valor Sugerido:</strong> {limiteParcela.TEXTO}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Decisão API Card */}
+                    {decisao && (
+                      <div style={{
+                        backgroundColor: decisao.APROVA === 'S' ? '#dbeafe' : '#fee2e2',
+                        border: `1px solid ${decisao.APROVA === 'S' ? '#93c5fd' : '#fca5a5'}`,
+                        borderRadius: '8px',
+                        padding: '20px',
+                        marginBottom: '15px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                      }}>
+                        <h3 style={{ 
+                          color: decisao.APROVA === 'S' ? '#1e40af' : '#991b1b', 
+                          marginBottom: '10px' 
+                        }}>
+                          {decisao.APROVA === 'S' ? '✅' : '❌'} Recomendação da API
+                        </h3>
+                        <div style={{ 
+                          fontSize: '16px', 
+                          fontWeight: 'bold',
+                          color: decisao.APROVA === 'S' ? '#1e40af' : '#dc2626'
+                        }}>
+                          {decisao.TEXTO}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Dados Completos (Expandível) */}
+                    <details style={{
+                      marginTop: '20px',
+                      padding: '15px',
+                      backgroundColor: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px'
+                    }}>
+                      <summary style={{ 
+                        cursor: 'pointer', 
+                        fontWeight: 'bold',
+                        color: '#4b5563'
+                      }}>
+                        🔍 Ver dados completos da API
+                      </summary>
+                      <pre style={{
+                        marginTop: '15px',
+                        whiteSpace: 'pre-wrap',
+                        fontSize: '11px',
+                        fontFamily: 'Consolas, Monaco, monospace',
+                        backgroundColor: '#1e293b',
+                        color: '#e2e8f0',
+                        padding: '15px',
+                        borderRadius: '6px',
+                        maxHeight: '300px',
+                        overflow: 'auto'
+                      }}>
+                        {JSON.stringify(dadosParsed, null, 2)}
+                      </pre>
+                    </details>
+                  </>
+                )}
+
+                <div style={{ marginTop: '20px', textAlign: 'right' }}>
+                  <button
+                    onClick={() => setModalDetalhes({ aberto: false, requisicao: null })}
+                    style={{
+                      padding: '10px 20px',
+                      fontSize: '14px',
+                      backgroundColor: '#2563eb',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Fechar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
       </div>
     </div>
   )

@@ -11,6 +11,8 @@ export interface RequisicaoCredito {
   aprovado: boolean
   aprovacaoManual?: boolean
   status: StatusRequisicao
+  numeroResposta?: string
+  dadosCompletos?: string
   dataAnalise: string
   contratoAssinado?: boolean
   dataAssinatura?: string
