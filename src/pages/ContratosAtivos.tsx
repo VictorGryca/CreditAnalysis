@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ContratoAtivo } from '../types/credito'
-import { listarContratos } from '../utils/storage'
+import { RequisicaoCredito } from '../types/credito'
+import { listarRequisicoes } from '../utils/storage'
 
 export default function ContratosAtivos() {
-  const [contratos, setContratos] = useState<ContratoAtivo[]>([])
+  const [contratos, setContratos] = useState<RequisicaoCredito[]>([])
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -12,11 +12,13 @@ export default function ContratosAtivos() {
   }, [])
 
   const carregarContratos = async () => {
-    const dados = await listarContratos()
-    setContratos(dados)
+    const todasRequisicoes = await listarRequisicoes()
+    // Filtrar apenas as requisições com status "regular"
+    const contratosRegulares = todasRequisicoes.filter(req => req.status === 'regular')
+    setContratos(contratosRegulares)
   }
 
-  const valorTotalAssegurado = contratos.reduce((total, c) => total + c.valorAssegurado, 0)
+  const valorTotalAssegurado = contratos.reduce((total, c) => total + c.valorTotal, 0)
 
   return (
     <div className="container">
@@ -81,11 +83,14 @@ export default function ContratosAtivos() {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <p style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
+                      <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px', color: '#111' }}>
+                        {contrato.nome}
+                      </p>
+                      <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>
                         CPF: {contrato.cpf}
                       </p>
                       <p style={{ color: '#6b7280', fontSize: '14px' }}>
-                        Data de Assinatura: {new Date(contrato.dataAssinatura).toLocaleDateString('pt-BR')}
+                        Data de Início: {new Date(contrato.dataAnalise).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
                     <div style={{
@@ -96,7 +101,7 @@ export default function ContratosAtivos() {
                       fontWeight: 'bold',
                       fontSize: '18px'
                     }}>
-                      {contrato.valorAssegurado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      {contrato.valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </div>
                   </div>
                 </div>
