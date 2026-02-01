@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { fetchAuthSession } from 'aws-amplify/auth'
 
 // Credenciais vêm do arquivo .env
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -8,4 +9,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Faltam variáveis de ambiente do Supabase! Verifique o arquivo .env')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    headers: async () => {
+      try {
+        const session = await fetchAuthSession()
+        const token = session.tokens?.idToken?.toString()
+        return token ? { Authorization: `Bearer ${token}` } : {}
+      } catch {
+        return {}
+      }
+    }
+  }
+})

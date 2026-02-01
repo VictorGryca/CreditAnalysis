@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import ImovelDetalhes from './pages/ImovelDetalhes'
 import FormularioPublico from './pages/FormularioPublico'
 import TesteAPI from './pages/TesteAPI'
+import ContratosAtivos from './pages/ContratosAtivos'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -17,7 +18,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/imovel/:id" element={<ImovelDetalhes />} />
         <Route path="/preencher/:imovelId" element={<FormularioPublico />} />
-        <Route path="/teste-api" element={<TesteAPI />} />
+        <Route path="/consulta-credito" element={<TesteAPI />} />
+        <Route path="/contratos-ativos" element={<ContratosAtivos />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,

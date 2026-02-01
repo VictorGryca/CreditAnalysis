@@ -6,6 +6,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [needsNewPassword, setNeedsNewPassword] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [userName, setUserName] = useState('')
@@ -30,6 +31,8 @@ export default function Login() {
     } catch (error) {
       // Não está logado, tudo bem
       console.log('Nenhuma sessão ativa')
+    } finally {
+      setIsCheckingAuth(false)
     }
   }
 
@@ -152,6 +155,16 @@ export default function Login() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (isCheckingAuth) {
+    return (
+      <div className="container">
+        <div className="page">
+          <p>Carregando...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
