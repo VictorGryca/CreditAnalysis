@@ -12,6 +12,11 @@ export default function Dashboard() {
     requisicao: RequisicaoCredito | null
     novoStatus: StatusRequisicao | null
   }>({ aberto: false, requisicao: null, novoStatus: null })
+  const [modalAviso, setModalAviso] = useState<{
+    aberto: boolean
+    mensagem: string
+  }>({ aberto: false, mensagem: '' })
+  const [draggedItem, setDraggedItem] = useState<RequisicaoCredito | null>(null)
   const navigate = useNavigate()
 
   const colunas: { status: StatusRequisicao, titulo: string, cor: string }[] = [
@@ -95,8 +100,44 @@ export default function Dashboard() {
     }
   }
 
+  const validarTransicaoStatus = (statusAtual: StatusRequisicao, novoStatus: StatusRequisicao): { valido: boolean, mensagem?: string } => {
+    // Cancelado pode receber de qualquer coluna
+    if (novoStatus === 'cancelado') {
+      return { valido: true }
+    }
+
+    // Definir fluxo permitido
+    const fluxoPermitido: Record<StatusRequisicao, StatusRequisicao[]> = {
+      'reprovado': ['aprovado', 'cancelado'],
+      'aprovado': ['em-andamento', 'cancelado'],
+      'em-andamento': ['regular', 'cancelado'],
+      'regular': ['cancelado'],
+      'cancelado': [] // Não pode sair de cancelado
+    }
+
+    const statusPermitidos = fluxoPermitido[statusAtual] || []
+    
+    if (!statusPermitidos.includes(novoStatus)) {
+      const proximosValidos = statusPermitidos.filter(s => s !== 'cancelado').map(s => statusNomes[s]).join(', ')
+      return { 
+        valido: false, 
+        mensagem: `Não é possível mover de "${statusNomes[statusAtual]}" para "${statusNomes[novoStatus]}" diretamente.\n\nPróximos status permitidos: ${proximosValidos || 'Nenhum (somente Cancelado)'}`
+      }
+    }
+
+    return { valido: true }
+  }
+
   const mudarStatus = (requisicao: RequisicaoCredito, novoStatus: StatusRequisicao) => {
     if (requisicao.status === novoStatus) return
+    
+    // Validar transição
+    const validacao = validarTransicaoStatus(requisicao.status, novoStatus)
+    if (!validacao.valido) {
+      setModalAviso({ aberto: true, mensagem: validacao.mensagem || '' })
+      carregarRequisicoes() // Recarregar para resetar o select
+      return
+    }
     
     setModalConfirmacao({
       aberto: true,
@@ -109,14 +150,39 @@ export default function Dashboard() {
     const { requisicao, novoStatus } = modalConfirmacao
     if (!requisicao || !novoStatus) return
     
+    const dadosAtualizacao: Partial<RequisicaoCredito> = { status: novoStatus }
+    
+    // Se estava reprovado pelo sistema e está sendo movido para aprovado, marcar como aprovação manual
+    if (!requisicao.aprovado && novoStatus === 'aprovado') {
+      dadosAtualizacao.aprovacaoManual = true
+    }
+    
     try {
-      await atualizarRequisicao(requisicao.id, { status: novoStatus })
+      await atualizarRequisicao(requisicao.id, dadosAtualizacao)
       await carregarRequisicoes()
       setModalConfirmacao({ aberto: false, requisicao: null, novoStatus: null })
     } catch (error) {
       console.error('Erro ao mudar status:', error)
       alert('Erro ao atualizar status')
     }
+  }
+
+  const handleDragStart = (requisicao: RequisicaoCredito) => {
+    setDraggedItem(requisicao)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
+  const handleDrop = (novoStatus: StatusRequisicao) => {
+    if (!draggedItem || draggedItem.status === novoStatus) {
+      setDraggedItem(null)
+      return
+    }
+
+    mudarStatus(draggedItem, novoStatus)
+    setDraggedItem(null)
   }
 
   const cancelarMudancaStatus = async () => {
@@ -267,6 +333,82 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Modal de Aviso */}
+        {modalAviso.aberto && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '30px',
+              maxWidth: '500px',
+              width: '90%',
+              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+              animation: 'slideIn 0.2s ease-out'
+            }}>
+              <h2 style={{ 
+                margin: '0 0 20px 0', 
+                fontSize: '22px',
+                color: '#dc2626',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                🚫 Ação Não Permitida
+              </h2>
+              
+              <div style={{
+                backgroundColor: '#fef2f2',
+                borderRadius: '8px',
+                padding: '15px',
+                marginBottom: '25px',
+                border: '1px solid #fecaca'
+              }}>
+                <p style={{ 
+                  fontSize: '15px', 
+                  color: '#374151', 
+                  lineHeight: '1.6', 
+                  margin: 0,
+                  whiteSpace: 'pre-line'
+                }}>
+                  {modalAviso.mensagem}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setModalAviso({ aberto: false, mensagem: '' })}
+                  style={{
+                    padding: '10px 20px',
+                    fontSize: '14px',
+                    backgroundColor: '#2563eb',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                >
+                  Entendi
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
           <h1>📋 Requisições de Crédito</h1>
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -319,12 +461,15 @@ export default function Dashboard() {
               return (
                 <div 
                   key={coluna.status}
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDrop(coluna.status)}
                   style={{ 
                     minWidth: '300px',
-                    backgroundColor: '#f9fafb',
+                    backgroundColor: draggedItem && draggedItem.status !== coluna.status ? '#e0f2fe' : '#f9fafb',
                     borderRadius: '12px',
                     padding: '15px',
-                    flex: '1'
+                    flex: '1',
+                    transition: 'background-color 0.2s'
                   }}
                 >
                   <div style={{
@@ -358,15 +503,40 @@ export default function Dashboard() {
                     {requisicoesDaColuna.map(req => (
                       <div
                         key={req.id}
+                        draggable
+                        onDragStart={() => handleDragStart(req)}
                         style={{
                           backgroundColor: 'white',
                           border: `2px solid ${coluna.cor}`,
                           borderRadius: '8px',
                           padding: '12px',
                           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                          cursor: 'pointer'
+                          cursor: 'grab',
+                          opacity: draggedItem?.id === req.id ? 0.5 : 1,
+                          transition: 'opacity 0.2s'
                         }}
                       >
+                        {req.aprovacaoManual && (
+                          <div style={{
+                            marginBottom: '8px',
+                            padding: '6px 8px',
+                            backgroundColor: '#fef3c7',
+                            border: '1px solid #fbbf24',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            color: '#92400e',
+                            fontWeight: 'bold',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            ⚠️ Aprovação Manual
+                            <span style={{ fontSize: '10px', fontWeight: 'normal' }}>
+                              (Reprovado pelo sistema)
+                            </span>
+                          </div>
+                        )}
+                        
                         <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
                           <p style={{ fontWeight: 'bold', marginBottom: '8px', color: '#111' }}>
                             CPF: {req.cpf}
