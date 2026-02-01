@@ -20,3 +20,8 @@ frontend:
       headers:
         - key: 'Cache-Control'
           value: 'no-cache'
+  # Redirects para Single Page Application
+  rewrites:
+    - source: '/<*>'
+      target: '/index.html'
+      status: '200'

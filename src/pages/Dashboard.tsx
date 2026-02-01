@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAuthSession, signOut } from 'aws-amplify/auth'
 import { RequisicaoCredito, StatusRequisicao } from '../types/credito'
-import { listarRequisicoes, atualizarRequisicao, salvarContrato } from '../utils/storage'
+import { listarRequisicoes, atualizarRequisicao } from '../utils/storage'
 
 export default function Dashboard() {
   const [requisicoes, setRequisicoes] = useState<RequisicaoCredito[]>([])
@@ -82,32 +82,6 @@ export default function Dashboard() {
       console.error('Erro ao verificar sessão:', error)
       // Não redirecionar em caso de erro, pode ser temporário
       setIsCheckingAuth(false)
-    }
-  }
-
-  const marcarContratoAssinado = async (requisicao: RequisicaoCredito, assinado: boolean) => {
-    const dataAssinatura = assinado ? new Date().toISOString() : undefined
-    
-    try {
-      await atualizarRequisicao(requisicao.id, { 
-        contratoAssinado: assinado,
-        dataAssinatura 
-      })
-      
-      if (assinado) {
-        // Criar contrato ativo
-        await salvarContrato({
-          id: requisicao.id,
-          cpf: requisicao.cpf,
-          valorAssegurado: requisicao.valorTotal,
-          dataAssinatura: dataAssinatura!
-        })
-      }
-      
-      await carregarRequisicoes()
-    } catch (error) {
-      console.error('Erro ao marcar contrato:', error)
-      alert('Erro ao atualizar contrato')
     }
   }
 
@@ -594,21 +568,6 @@ export default function Dashboard() {
                           <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '6px' }}>
                             {new Date(req.dataAnalise).toLocaleDateString('pt-BR')}
                           </p>
-                          
-                          {req.contratoAssinado && (
-                            <div style={{
-                              marginTop: '8px',
-                              padding: '6px',
-                              backgroundColor: '#d1fae5',
-                              borderRadius: '4px',
-                              fontSize: '11px',
-                              color: '#065f46',
-                              fontWeight: 'bold',
-                              textAlign: 'center'
-                            }}>
-                              ✓ Contrato Assinado
-                            </div>
-                          )}
                           
                           <select
                             value={req.status}

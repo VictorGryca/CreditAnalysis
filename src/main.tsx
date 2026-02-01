@@ -5,9 +5,7 @@ import './index.css'
 import './aws-config' // Configurar Amplify
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
-import ImovelDetalhes from './pages/ImovelDetalhes'
-import FormularioPublico from './pages/FormularioPublico'
-import TesteAPI from './pages/TesteAPI'
+import ConsultaCredito from './pages/ConsultaCredito'
 import ContratosAtivos from './pages/ContratosAtivos'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -16,9 +14,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/imovel/:id" element={<ImovelDetalhes />} />
-        <Route path="/preencher/:imovelId" element={<FormularioPublico />} />
-        <Route path="/consulta-credito" element={<TesteAPI />} />
+        <Route path="/consulta-credito" element={<ConsultaCredito />} />
         <Route path="/contratos-ativos" element={<ContratosAtivos />} />
       </Routes>
     </BrowserRouter>

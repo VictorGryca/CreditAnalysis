@@ -1,4 +1,4 @@
-import { RequisicaoCredito, ContratoAtivo } from '../types/credito'
+import { RequisicaoCredito } from '../types/credito'
 import { supabase } from '../supabaseClient'
 
 export const salvarRequisicao = async (requisicao: RequisicaoCredito) => {
@@ -17,9 +17,7 @@ export const salvarRequisicao = async (requisicao: RequisicaoCredito) => {
       status: requisicao.status,
       numero_resposta: requisicao.numeroResposta,
       dados_completos: requisicao.dadosCompletos,
-      data_analise: requisicao.dataAnalise,
-      contrato_assinado: requisicao.contratoAssinado,
-      data_assinatura: requisicao.dataAssinatura
+      data_analise: requisicao.dataAnalise
     }])
   
   if (error) {
@@ -53,17 +51,13 @@ export const listarRequisicoes = async (): Promise<RequisicaoCredito[]> => {
     status: item.status || (item.aprovado ? 'aprovado' : 'reprovado'),
     numeroResposta: item.numero_resposta,
     dadosCompletos: item.dados_completos,
-    dataAnalise: item.data_analise,
-    contratoAssinado: item.contrato_assinado,
-    dataAssinatura: item.data_assinatura
+    dataAnalise: item.data_analise
   }))
 }
 
 export const atualizarRequisicao = async (id: string, dados: Partial<RequisicaoCredito>) => {
   const updateData: any = {}
   
-  if (dados.contratoAssinado !== undefined) updateData.contrato_assinado = dados.contratoAssinado
-  if (dados.dataAssinatura !== undefined) updateData.data_assinatura = dados.dataAssinatura
   if (dados.status !== undefined) updateData.status = dados.status
   if (dados.aprovacaoManual !== undefined) updateData.aprovacao_manual = dados.aprovacaoManual
   if (dados.numeroResposta !== undefined) updateData.numero_resposta = dados.numeroResposta
@@ -76,53 +70,6 @@ export const atualizarRequisicao = async (id: string, dados: Partial<RequisicaoC
   
   if (error) {
     console.error('Erro ao atualizar requisição:', error)
-    throw error
-  }
-}
-
-export const salvarContrato = async (contrato: ContratoAtivo) => {
-  const { error } = await supabase
-    .from('contratos_ativos')
-    .insert([{
-      id: contrato.id,
-      cpf: contrato.cpf,
-      valor_assegurado: contrato.valorAssegurado,
-      data_assinatura: contrato.dataAssinatura
-    }])
-  
-  if (error) {
-    console.error('Erro ao salvar contrato:', error)
-    throw error
-  }
-}
-
-export const listarContratos = async (): Promise<ContratoAtivo[]> => {
-  const { data, error } = await supabase
-    .from('contratos_ativos')
-    .select('*')
-    .order('data_assinatura', { ascending: false })
-  
-  if (error) {
-    console.error('Erro ao listar contratos:', error)
-    return []
-  }
-  
-  return (data || []).map(item => ({
-    id: item.id,
-    cpf: item.cpf,
-    valorAssegurado: parseFloat(item.valor_assegurado),
-    dataAssinatura: item.data_assinatura
-  }))
-}
-
-export const removerContrato = async (id: string) => {
-  const { error } = await supabase
-    .from('contratos_ativos')
-    .delete()
-    .eq('id', id)
-  
-  if (error) {
-    console.error('Erro ao remover contrato:', error)
     throw error
   }
 }

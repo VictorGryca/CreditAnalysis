@@ -14,13 +14,4 @@ export interface RequisicaoCredito {
   numeroResposta?: string
   dadosCompletos?: string
   dataAnalise: string
-  contratoAssinado?: boolean
-  dataAssinatura?: string
-}
-
-export interface ContratoAtivo {
-  id: string
-  cpf: string
-  valorAssegurado: number
-  dataAssinatura: string
 }

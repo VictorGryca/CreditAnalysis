@@ -1,9 +1,0 @@
-{
-  "name": "creditanalysis-lambda",
-  "version": "1.0.0",
-  "description": "Lambda function para envio de emails",
-  "main": "sendEmail.js",
-  "dependencies": {
-    "nodemailer": "^6.9.8"
-  }
-}

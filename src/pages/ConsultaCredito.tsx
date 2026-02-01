@@ -23,7 +23,7 @@ interface ResultadoFormatado {
   decisao?: Decisao
 }
 
-export default function TesteAPI() {
+export default function ConsultaCredito() {
   const [cpf, setCpf] = useState('')
   const [aluguel, setAluguel] = useState('')
   const [condominio, setCondominio] = useState('')
