@@ -15,6 +15,7 @@ interface Decisao {
 }
 
 interface ResultadoFormatado {
+  nome?: string
   score?: ScoreModel
   rendaPresumida?: ScoreModel
   limiteParcela?: ScoreModel
@@ -80,6 +81,9 @@ export default function TesteAPI() {
     const acerta = bodyData?.['SPCA-XML']?.RESPOSTA?.ACERTA || bodyData
     const scores = acerta?.['SCORE-CLASSIFICACAO-VARIOS-MODELOS'] || []
     
+    // Extrair nome do inquilino
+    const nome = acerta?.IDENTIFICACAO?.NOME || ''
+    
     // Buscar Score (POSITIVO PF - código 115)
     const score = scores.find((s: ScoreModel) => 
       s.CODIGONATUREZAMODELO === '115' || s.CODIGONATUREZAMODELO === 115
@@ -98,7 +102,7 @@ export default function TesteAPI() {
     // Buscar Decisão
     const decisao = acerta?.DECISAO
     
-    return { score, rendaPresumida, limiteParcela, decisao }
+    return { nome, score, rendaPresumida, limiteParcela, decisao }
   }
 
   const calcularRendaMedia = (textoRenda?: string): number => {
@@ -114,12 +118,13 @@ export default function TesteAPI() {
     return (min + max) / 2
   }
 
-  const salvarResultado = async (aprovado: boolean) => {
+  const salvarResultado = async (aprovado: boolean, nomeInquilino: string) => {
     const totalImovel = parseMoeda(aluguel) + parseMoeda(condominio) + parseMoeda(seguro)
     
     try {
       await salvarRequisicao({
         id: Date.now().toString(),
+        nome: nomeInquilino,
         cpf: cpf,
         aluguel: parseMoeda(aluguel),
         condominio: parseMoeda(condominio),
@@ -301,7 +306,7 @@ export default function TesteAPI() {
           
           // Salvar resultado automaticamente
           if (!resultado._salvo) {
-            salvarResultado(creditoAprovado)
+            salvarResultado(creditoAprovado, dados.nome || 'Nome não informado')
             resultado._salvo = true
           }
           

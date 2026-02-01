@@ -2,6 +2,7 @@ export type StatusRequisicao = 'reprovado' | 'aprovado' | 'em-andamento' | 'regu
 
 export interface RequisicaoCredito {
   id: string
+  nome: string
   cpf: string
   aluguel: number
   condominio: number

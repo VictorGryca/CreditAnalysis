@@ -538,7 +538,10 @@ export default function Dashboard() {
                         )}
                         
                         <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
-                          <p style={{ fontWeight: 'bold', marginBottom: '8px', color: '#111' }}>
+                          <p style={{ fontWeight: 'bold', marginBottom: '4px', color: '#111', fontSize: '14px' }}>
+                            {req.nome}
+                          </p>
+                          <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
                             CPF: {req.cpf}
                           </p>
                           <p style={{ color: '#374151' }}>

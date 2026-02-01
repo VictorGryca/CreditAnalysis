@@ -6,6 +6,7 @@ export const salvarRequisicao = async (requisicao: RequisicaoCredito) => {
     .from('requisicoes_credito')
     .insert([{
       id: requisicao.id,
+      nome: requisicao.nome,
       cpf: requisicao.cpf,
       aluguel: requisicao.aluguel,
       condominio: requisicao.condominio,
@@ -39,6 +40,7 @@ export const listarRequisicoes = async (): Promise<RequisicaoCredito[]> => {
   
   return (data || []).map(item => ({
     id: item.id,
+    nome: item.nome || '',
     cpf: item.cpf,
     aluguel: parseFloat(item.aluguel),
     condominio: parseFloat(item.condominio),
