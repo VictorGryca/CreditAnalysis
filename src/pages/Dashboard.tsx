@@ -17,6 +17,13 @@ export default function Dashboard() {
     mensagem: string
   }>({ aberto: false, mensagem: '' })
   const [draggedItem, setDraggedItem] = useState<RequisicaoCredito | null>(null)
+  const [buscaPorColuna, setBuscaPorColuna] = useState<Record<StatusRequisicao, string>>({
+    'reprovado': '',
+    'aprovado': '',
+    'em-andamento': '',
+    'regular': '',
+    'cancelado': ''
+  })
   const navigate = useNavigate()
 
   const colunas: { status: StatusRequisicao, titulo: string, cor: string }[] = [
@@ -456,7 +463,12 @@ export default function Dashboard() {
             paddingBottom: '20px'
           }}>
             {colunas.map(coluna => {
-              const requisicoesDaColuna = requisicoes.filter(req => req.status === coluna.status)
+              const termoBusca = buscaPorColuna[coluna.status].toLowerCase()
+              const requisicoesDaColuna = requisicoes
+                .filter(req => req.status === coluna.status)
+                .filter(req => 
+                  termoBusca === '' || req.nome.toLowerCase().includes(termoBusca)
+                )
               
               return (
                 <div 
@@ -497,6 +509,31 @@ export default function Dashboard() {
                     }}>
                       {requisicoesDaColuna.length}
                     </span>
+                  </div>
+
+                  {/* Barra de busca */}
+                  <div style={{ marginBottom: '15px' }}>
+                    <input
+                      type="text"
+                      placeholder="🔍 Buscar por nome..."
+                      value={buscaPorColuna[coluna.status]}
+                      onChange={(e) => setBuscaPorColuna({
+                        ...buscaPorColuna,
+                        [coluna.status]: e.target.value
+                      })}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        fontSize: '13px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        backgroundColor: 'white',
+                        outline: 'none',
+                        transition: 'border-color 0.2s'
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = coluna.cor}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+                    />
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
