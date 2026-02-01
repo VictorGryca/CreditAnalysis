@@ -454,7 +454,7 @@ export default function Dashboard() {
                   onDragOver={handleDragOver}
                   onDrop={() => handleDrop(coluna.status)}
                   style={{ 
-                    minWidth: '300px',
+                    minWidth: '200px',
                     backgroundColor: draggedItem && draggedItem.status !== coluna.status ? '#e0f2fe' : '#f9fafb',
                     borderRadius: '12px',
                     padding: '15px',
