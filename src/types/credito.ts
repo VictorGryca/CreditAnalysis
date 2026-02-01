@@ -1,3 +1,5 @@
+export type StatusRequisicao = 'reprovado' | 'aprovado' | 'em-andamento' | 'regular' | 'cancelado'
+
 export interface RequisicaoCredito {
   id: string
   cpf: string
@@ -6,6 +8,7 @@ export interface RequisicaoCredito {
   seguro: number
   valorTotal: number
   aprovado: boolean
+  status: StatusRequisicao
   dataAnalise: string
   contratoAssinado?: boolean
   dataAssinatura?: string

@@ -12,6 +12,7 @@ export const salvarRequisicao = async (requisicao: RequisicaoCredito) => {
       seguro: requisicao.seguro,
       valor_total: requisicao.valorTotal,
       aprovado: requisicao.aprovado,
+      status: requisicao.status,
       data_analise: requisicao.dataAnalise,
       contrato_assinado: requisicao.contratoAssinado,
       data_assinatura: requisicao.dataAssinatura
@@ -43,6 +44,7 @@ export const listarRequisicoes = async (): Promise<RequisicaoCredito[]> => {
     seguro: parseFloat(item.seguro),
     valorTotal: parseFloat(item.valor_total),
     aprovado: item.aprovado,
+    status: item.status || (item.aprovado ? 'aprovado' : 'reprovado'),
     dataAnalise: item.data_analise,
     contratoAssinado: item.contrato_assinado,
     dataAssinatura: item.data_assinatura
@@ -54,6 +56,7 @@ export const atualizarRequisicao = async (id: string, dados: Partial<RequisicaoC
   
   if (dados.contratoAssinado !== undefined) updateData.contrato_assinado = dados.contratoAssinado
   if (dados.dataAssinatura !== undefined) updateData.data_assinatura = dados.dataAssinatura
+  if (dados.status !== undefined) updateData.status = dados.status
   
   const { error } = await supabase
     .from('requisicoes_credito')

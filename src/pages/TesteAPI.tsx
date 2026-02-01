@@ -126,6 +126,7 @@ export default function TesteAPI() {
         seguro: parseMoeda(seguro),
         valorTotal: totalImovel,
         aprovado: aprovado,
+        status: aprovado ? 'aprovado' : 'reprovado',
         dataAnalise: new Date().toISOString()
       })
       
