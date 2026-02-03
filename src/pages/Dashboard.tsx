@@ -20,6 +20,7 @@ export default function Dashboard() {
     aberto: boolean
     requisicao: RequisicaoCredito | null
   }>({ aberto: false, requisicao: null })
+  const [jsonCopiado, setJsonCopiado] = useState(false)
   const [draggedItem, setDraggedItem] = useState<RequisicaoCredito | null>(null)
   const [buscaPorColuna, setBuscaPorColuna] = useState<Record<StatusRequisicao, string>>({
     'reprovado': '',
@@ -777,6 +778,7 @@ export default function Dashboard() {
                       </div>
                     )}
 
+
                     {/* Dados Completos (Expandível) */}
                     <details style={{
                       marginTop: '20px',
@@ -788,10 +790,59 @@ export default function Dashboard() {
                       <summary style={{ 
                         cursor: 'pointer', 
                         fontWeight: 'bold',
-                        color: '#4b5563'
+                        color: '#4b5563',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        listStyle: 'none',
+                        position: 'relative',
+                        paddingLeft: '20px'
                       }}>
-                        🔍 Ver dados completos da API
+                        <span style={{ position: 'relative' }}>
+                          <span className="arrow" style={{
+                            position: 'absolute',
+                            left: '-20px',
+                            transition: 'transform 0.2s',
+                            display: 'inline-block'
+                          }}>▶</span>
+                          🔍 Dados completos
+                        </span>
+                        
+                        {dadosParsed && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              navigator.clipboard.writeText(JSON.stringify(dadosParsed, null, 2))
+                              setJsonCopiado(true)
+                              setTimeout(() => setJsonCopiado(false), 2000)
+                            }}
+                            style={{
+                              padding: '4px 8px',
+                              fontSize: '14px',
+                              backgroundColor: jsonCopiado ? '#10b981' : '#6366f1',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontWeight: '600',
+                              whiteSpace: 'nowrap',
+                              transition: 'background-color 0.2s',
+                              lineHeight: '1',
+                              minWidth: 'auto',
+                              width: 'fit-content'
+                            }}
+                            onMouseOver={(e) => {
+                              if (!jsonCopiado) e.currentTarget.style.backgroundColor = '#4f46e5'
+                            }}
+                            onMouseOut={(e) => {
+                              if (!jsonCopiado) e.currentTarget.style.backgroundColor = '#6366f1'
+                            }}
+                          >
+                            {jsonCopiado ? '✓' : 'Copiar'}
+                          </button>
+                        )}
                       </summary>
+                      
                       <pre style={{
                         marginTop: '15px',
                         whiteSpace: 'pre-wrap',

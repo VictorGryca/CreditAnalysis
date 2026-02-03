@@ -306,7 +306,7 @@ export default function ConsultaCredito() {
           
           // Usar apenas APROVA da API para decisão
           const aprovaAPI = dados.decisao?.APROVA || 'N'
-          const creditoAprovado = aprovaAPI === 'S'
+          const creditoAprovado = aprovaAPI === 'S' 
           const totalImovel = parseMoeda(aluguel) + parseMoeda(condominio) + parseMoeda(seguro)
           const rendaMedia = calcularRendaMedia(dados.rendaPresumida?.TEXTO)
           
