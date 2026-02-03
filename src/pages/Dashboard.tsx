@@ -752,6 +752,62 @@ export default function Dashboard() {
                       </div>
                     )}
 
+                    {/* Resumo de Títulos Protestados Card */}
+                    {(() => {
+                      const resumoProtestados = bodyData?.['SPCA-XML']?.RESPOSTA?.ACERTA?.['RESUMO-TITULOS-PROTESTADOS'];
+                      if (!resumoProtestados) return null;
+
+                      // Se não há registro válido, mostra que não há dados
+                      if (resumoProtestados.REGISTRO !== 'S') {
+                        return (
+                          <div style={{
+                            backgroundColor: '#f3f4f6',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '8px',
+                            padding: '20px',
+                            marginBottom: '15px',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                          }}>
+                            <h3 style={{ color: '#6b7280', marginBottom: '10px' }}>
+                              📋 Títulos Protestados
+                            </h3>
+                            <div style={{ fontSize: '14px', color: '#9ca3af' }}>
+                              <p>Sem informações de protestos disponíveis</p>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // Há registro válido - mostra os dados
+                      const total = parseInt(resumoProtestados.TOTAL) || 0;
+                      return (
+                        <div style={{
+                          backgroundColor: total > 0 ? '#fef3c7' : '#d1fae5',
+                          border: `1px solid ${total > 0 ? '#fbbf24' : '#6ee7b7'}`,
+                          borderRadius: '8px',
+                          padding: '20px',
+                          marginBottom: '15px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                        }}>
+                          <h3 style={{ 
+                            color: total > 0 ? '#92400e' : '#065f46',
+                            marginBottom: '10px' 
+                          }}>
+                            {total > 0 ? '⚠️' : '✅'} Títulos Protestados
+                          </h3>
+                          <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                            <p><strong>Total de Protestos:</strong> {total}</p>
+                            {total > 0 && (
+                              <>
+                                <p><strong>Período:</strong> {resumoProtestados.PERIODOINICIAL} a {resumoProtestados.PERIODOFINAL}</p>
+                                <p><strong>Valor Acumulado:</strong> {resumoProtestados.MOEDA} {resumoProtestados.VALORACUMULADO}</p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     {/* Decisão API Card */}
                     {decisao && (
                       <div style={{
