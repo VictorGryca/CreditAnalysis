@@ -90,17 +90,17 @@ export default function ConsultaCredito() {
     
     // Buscar Score (POSITIVO PF - código 115)
     const score = scores.find((s: ScoreModel) => 
-      s.CODIGONATUREZAMODELO === '115' || s.CODIGONATUREZAMODELO === '115'
+      s.CODIGONATUREZAMODELO === '115' || s.CODIGONATUREZAMODELO === 115
     )
     
     // Buscar Renda Presumida (código 116)
     const rendaPresumida = scores.find((s: ScoreModel) => 
-      s.CODIGONATUREZAMODELO === '116' || s.CODIGONATUREZAMODELO === '116'
+      s.CODIGONATUREZAMODELO === '116' || s.CODIGONATUREZAMODELO === 116
     )
     
     // Buscar Limite de Parcela (código 109)
     const limiteParcela = scores.find((s: ScoreModel) => 
-      s.CODIGONATUREZAMODELO === '109' || s.CODIGONATUREZAMODELO === '109'
+      s.CODIGONATUREZAMODELO === '109' || s.CODIGONATUREZAMODELO === 109
     )
     
     // Buscar Decisão
@@ -306,7 +306,8 @@ export default function ConsultaCredito() {
           
           // Usar apenas APROVA da API para decisão
           const aprovaAPI = dados.decisao?.APROVA || 'N'
-          const creditoAprovado = aprovaAPI === 'S' 
+          const creditoAprovado = aprovaAPI === 'S'
+          const creditoCautela = aprovaAPI === 'C' 
           const totalImovel = parseMoeda(aluguel) + parseMoeda(condominio) + parseMoeda(seguro)
           const rendaMedia = calcularRendaMedia(dados.rendaPresumida?.TEXTO)
           
@@ -328,29 +329,29 @@ export default function ConsultaCredito() {
               
               {/* Decisão Final */}
               <div style={{
-                backgroundColor: creditoAprovado ? '#d1fae5' : '#fee2e2',
-                border: `2px solid ${creditoAprovado ? '#10b981' : '#ef4444'}`,
+                backgroundColor: creditoAprovado ? '#d1fae5' : creditoCautela ? '#fef3c7' : '#fee2e2',
+                border: `2px solid ${creditoAprovado ? '#10b981' : creditoCautela ? '#f59e0b' : '#ef4444'}`,
                 borderRadius: '12px',
                 padding: '25px',
                 marginBottom: '20px',
                 boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
               }}>
                 <h2 style={{ 
-                  color: creditoAprovado ? '#065f46' : '#991b1b', 
+                  color: creditoAprovado ? '#065f46' : creditoCautela ? '#92400e' : '#991b1b', 
                   marginBottom: '15px',
                   fontSize: '24px'
                 }}>
-                  {creditoAprovado ? '✅ CRÉDITO APROVADO' : '❌ CRÉDITO REPROVADO'}
+                  {creditoAprovado ? '✅ CRÉDITO APROVADO' : creditoCautela ? '⚠️ ANALISAR COM CAUTELA' : '❌ CRÉDITO REPROVADO'}
                 </h2>
                 <div style={{ 
                   fontSize: '16px', 
-                  color: creditoAprovado ? '#047857' : '#dc2626',
+                  color: creditoAprovado ? '#047857' : creditoCautela ? '#b45309' : '#dc2626',
                   lineHeight: '1.8'
                 }}>
                   <p><strong>CPF:</strong> {cpf}</p>
                   <p><strong>Valor Total do Imóvel:</strong> {totalImovel.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                   <p><strong>Renda Média Estimada:</strong> {rendaMedia.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                  <p><strong>Recomendação da API:</strong> {dados.decisao?.TEXTO}</p>
+                  <p><strong></strong> {dados.decisao?.TEXTO}</p>
                   <p style={{ marginTop: '15px', fontStyle: 'italic', fontSize: '14px' }}>
                     Redirecionando para o dashboard em 2 segundos...
                   </p>
@@ -434,23 +435,23 @@ export default function ConsultaCredito() {
               {/* Decisão API Card */}
               {dados.decisao && (
                 <div style={{
-                  backgroundColor: dados.decisao.APROVA === 'S' ? '#dbeafe' : '#fee2e2',
-                  border: `1px solid ${dados.decisao.APROVA === 'S' ? '#93c5fd' : '#fca5a5'}`,
+                  backgroundColor: dados.decisao.APROVA === 'S' ? '#dbeafe' : dados.decisao.APROVA === 'C' ? '#fef3c7' : '#fee2e2',
+                  border: `1px solid ${dados.decisao.APROVA === 'S' ? '#93c5fd' : dados.decisao.APROVA === 'C' ? '#fbbf24' : '#fca5a5'}`,
                   borderRadius: '8px',
                   padding: '20px',
                   marginBottom: '15px',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                 }}>
                   <h3 style={{ 
-                    color: dados.decisao.APROVA === 'S' ? '#1e40af' : '#991b1b', 
+                    color: dados.decisao.APROVA === 'S' ? '#1e40af' : dados.decisao.APROVA === 'C' ? '#92400e' : '#991b1b', 
                     marginBottom: '10px' 
                   }}>
-                    {dados.decisao.APROVA === 'S' ? '✅' : '❌'} Recomendação da API
+                    {dados.decisao.APROVA === 'S' ? '✅' : dados.decisao.APROVA === 'C' ? '⚠️' : '❌'} 
                   </h3>
                   <div style={{ 
                     fontSize: '16px', 
                     fontWeight: 'bold',
-                    color: dados.decisao.APROVA === 'S' ? '#1e40af' : '#dc2626'
+                    color: dados.decisao.APROVA === 'S' ? '#1e40af' : dados.decisao.APROVA === 'C' ? '#b45309' : '#dc2626'
                   }}>
                     {dados.decisao.TEXTO}
                   </div>

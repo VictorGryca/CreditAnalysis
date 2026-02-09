@@ -622,6 +622,34 @@ export default function Dashboard() {
           const rendaPresumida = scores.find((s: any) => s.CODIGONATUREZAMODELO === '116' || s.CODIGONATUREZAMODELO === 116)
           const limiteParcela = scores.find((s: any) => s.CODIGONATUREZAMODELO === '109' || s.CODIGONATUREZAMODELO === 109)
           const decisao = acerta?.DECISAO
+          const identificacao = acerta?.IDENTIFICACAO
+
+          // Mapear estado civil
+          const estadoCivilMap: Record<string, string> = {
+            '0': 'NÃO INFORMADO',
+            '1': 'CASADO',
+            '2': 'SOLTEIRO',
+            '3': 'VIÚVO',
+            '4': 'DIVORCIADO/DESQUITADO',
+            '5': 'SEPARADO',
+            '6': 'COMPANHEIRO / UNIÃO ESTÁVEL',
+            '9': 'OUTROS'
+          }
+
+          // Calcular idade
+          const calcularIdade = (dataNascimento: string) => {
+            if (!dataNascimento) return null
+            const [dia, mes, ano] = dataNascimento.split('/').map(Number)
+            const nascimento = new Date(ano, mes - 1, dia)
+            const hoje = new Date()
+            let idade = hoje.getFullYear() - nascimento.getFullYear()
+            const mesAtual = hoje.getMonth()
+            const diaAtual = hoje.getDate()
+            if (mesAtual < mes - 1 || (mesAtual === mes - 1 && diaAtual < dia)) {
+              idade--
+            }
+            return idade
+          }
 
           return (
             <div style={{
@@ -694,6 +722,44 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <>
+                    {/* Identificação Card */}
+                    {identificacao && (
+                      <div style={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        padding: '20px',
+                        marginBottom: '15px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                      }}>
+                        <h3 style={{ color: '#1f2937', marginBottom: '15px', fontSize: '16px', fontWeight: 'bold' }}>
+                          👤 Identificação
+                        </h3>
+                        <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                          {identificacao['DATANASCIMENTO'] && (
+                            <div style={{ display: 'flex', gap: '20px', marginBottom: '8px' }}>
+                              <p style={{ margin: 0 }}>
+                                <strong>Data de Nascimento:</strong> {identificacao['DATANASCIMENTO']}
+                              </p>
+                              <p style={{ margin: 0 }}>
+                                <strong>Idade:</strong> {calcularIdade(identificacao['DATANASCIMENTO'])} anos
+                              </p>
+                            </div>
+                          )}
+                          {identificacao['NOMEMAE'] && (
+                            <p style={{ margin: '8px 0' }}>
+                              <strong>Nome da Mãe:</strong> {identificacao['NOMEMAE']}
+                            </p>
+                          )}
+                          {identificacao['ESTADOCIVIL'] && (
+                            <p style={{ margin: '8px 0' }}>
+                              <strong>Estado Civil:</strong> {estadoCivilMap[identificacao['ESTADOCIVIL']] || identificacao['ESTADO-CIVIL']}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Score Card */}
                     {score && (
                       <div style={{
@@ -709,7 +775,9 @@ export default function Dashboard() {
                         </h3>
                         <div style={{ fontSize: '14px', color: '#6b7280' }}>
                           <p><strong>Score:</strong> {score.PROBABILIDADE}</p>
+                          <p><strong>Taxa Inadimplência:</strong> {score.PROBABILIDADE/100}%</p>
                           <p><strong>Classificação:</strong> {score.TEXTO}</p>
+                          
                         </div>
                       </div>
                     )}
@@ -811,25 +879,25 @@ export default function Dashboard() {
                     {/* Decisão API Card */}
                     {decisao && (
                       <div style={{
-                        backgroundColor: decisao.APROVA === 'S' ? '#dbeafe' : '#fee2e2',
-                        border: `1px solid ${decisao.APROVA === 'S' ? '#93c5fd' : '#fca5a5'}`,
+                        backgroundColor: decisao.APROVA === 'S' ? '#dbeafe' : decisao.APROVA === 'C' ? '#fef3c7' : '#fee2e2',
+                        border: `1px solid ${decisao.APROVA === 'S' ? '#93c5fd' : decisao.APROVA === 'C' ? '#fbbf24' : '#fca5a5'}`,
                         borderRadius: '8px',
                         padding: '20px',
                         marginBottom: '15px',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                       }}>
                         <h3 style={{ 
-                          color: decisao.APROVA === 'S' ? '#1e40af' : '#991b1b', 
-                          marginBottom: '10px' 
+                          color: decisao.APROVA === 'S' ? '#1e40af' : decisao.APROVA === 'C' ? '#92400e' : '#991b1b', 
                         }}>
-                          {decisao.APROVA === 'S' ? '✅' : '❌'} Recomendação da API
+                           
                         </h3>
                         <div style={{ 
-                          fontSize: '16px', 
+                          fontSize: '20px', 
                           fontWeight: 'bold',
-                          color: decisao.APROVA === 'S' ? '#1e40af' : '#dc2626'
+                          color: decisao.APROVA === 'S' ? '#1e40af' : decisao.APROVA === 'C' ? '#b45309' : '#dc2626'
                         }}>
-                          {decisao.TEXTO}
+                          {decisao.APROVA === 'S' ? '✅' : decisao.APROVA === 'C' ? '⚠️' : '❌'} {decisao.TEXTO}
+                          
                         </div>
                       </div>
                     )}
