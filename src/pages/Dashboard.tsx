@@ -767,9 +767,9 @@ export default function Dashboard() {
                               <strong>Nome da Mãe:</strong> {identificacao['NOMEMAE']}
                             </p>
                           )}
-                          {identificacao['ESTADOCIVIL'] && (
+                          {(identificacao['ESTADOCIVIL'] !== undefined && identificacao['ESTADOCIVIL'] !== null) && (
                             <p style={{ margin: '8px 0' }}>
-                              <strong>Estado Civil:</strong> {estadoCivilMap[identificacao['ESTADOCIVIL']] || identificacao['ESTADO-CIVIL']}
+                              <strong>Estado Civil:</strong> {estadoCivilMap[identificacao['ESTADOCIVIL']]}
                             </p>
                           )}
                           {localizacao['NOMELOGRADOURO'] && (
