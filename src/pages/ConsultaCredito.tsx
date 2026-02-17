@@ -90,17 +90,17 @@ export default function ConsultaCredito() {
     
     // Buscar Score (POSITIVO PF - código 115)
     const score = scores.find((s: ScoreModel) => 
-      s.CODIGONATUREZAMODELO === '115' || s.CODIGONATUREZAMODELO === 115
+      s.CODIGONATUREZAMODELO === '115' 
     )
     
     // Buscar Renda Presumida (código 116)
     const rendaPresumida = scores.find((s: ScoreModel) => 
-      s.CODIGONATUREZAMODELO === '116' || s.CODIGONATUREZAMODELO === 116
+      s.CODIGONATUREZAMODELO === '116' 
     )
     
     // Buscar Limite de Parcela (código 109)
     const limiteParcela = scores.find((s: ScoreModel) => 
-      s.CODIGONATUREZAMODELO === '109' || s.CODIGONATUREZAMODELO === 109
+      s.CODIGONATUREZAMODELO === '109' 
     )
     
     // Buscar Decisão
