@@ -57,6 +57,17 @@ export default function Dashboard() {
     }
   }, [isCheckingAuth])
 
+  // Detectar tecla ESC para fechar modal
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && modalDetalhes.aberto) {
+        setModalDetalhes({ aberto: false, requisicao: null })
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [modalDetalhes.aberto])
+
   const carregarRequisicoes = async () => {
     const dados = await listarRequisicoes()
     setRequisicoes(dados)
@@ -623,6 +634,7 @@ export default function Dashboard() {
           const limiteParcela = scores.find((s: any) => s.CODIGONATUREZAMODELO === '109' || s.CODIGONATUREZAMODELO === 109)
           const decisao = acerta?.DECISAO
           const identificacao = acerta?.IDENTIFICACAO
+          const localizacao = acerta?.LOCALIZACAO
 
           // Mapear estado civil
           const estadoCivilMap: Record<string, string> = {
@@ -652,7 +664,9 @@ export default function Dashboard() {
           }
 
           return (
-            <div style={{
+            <div 
+              onClick={() => setModalDetalhes({ aberto: false, requisicao: null })}
+              style={{
               position: 'fixed',
               top: 0,
               left: 0,
@@ -665,7 +679,9 @@ export default function Dashboard() {
               zIndex: 1000,
               padding: '20px'
             }}>
-              <div style={{
+              <div 
+                onClick={(e) => e.stopPropagation()}
+                style={{
                 backgroundColor: 'white',
                 borderRadius: '12px',
                 padding: '30px',
@@ -756,9 +772,22 @@ export default function Dashboard() {
                               <strong>Estado Civil:</strong> {estadoCivilMap[identificacao['ESTADOCIVIL']] || identificacao['ESTADO-CIVIL']}
                             </p>
                           )}
+                          {localizacao['NOMELOGRADOURO'] && (
+                            <p style={{ margin: '8px 0' }}>
+                              <strong>Endereço:</strong>{' '}
+                              {localizacao['TIPOLOGRADOURO']}.{' '}
+                              {localizacao['NOMELOGRADOURO']}, {localizacao['NUMEROLOGRADOURO']} - {' '}
+                              {localizacao['BAIRRO']}, {localizacao['CIDADE']} - {' '}
+                              {localizacao['UNIDADEFEDERATIVA']}, {localizacao['CEP']}
+                            </p>
+                          )}
+                          
+
                         </div>
                       </div>
                     )}
+
+
 
                     {/* Score Card */}
                     {score && (
@@ -771,10 +800,10 @@ export default function Dashboard() {
                         boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                       }}>
                         <h3 style={{ color: '#1f2937', marginBottom: '10px' }}>
-                          📊 {score.DESCRICAONATUREZA}
+                          📊 {'Classificação'}
                         </h3>
                         <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                          <p><strong>Score:</strong> {score.PROBABILIDADE}</p>
+                          <p><strong>Score:</strong> {score.SCORE}</p>
                           <p><strong>Taxa Inadimplência:</strong> {score.PROBABILIDADE/100}%</p>
                           <p><strong>Classificação:</strong> {score.TEXTO}</p>
                           
@@ -793,7 +822,7 @@ export default function Dashboard() {
                         boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                       }}>
                         <h3 style={{ color: '#1f2937', marginBottom: '10px' }}>
-                          💰 {rendaPresumida.DESCRICAONATUREZA}
+                          💰 {'Renda Presumida'}
                         </h3>
                         <div style={{ fontSize: '14px', color: '#6b7280' }}>
                           <p><strong>Faixa de Renda:</strong> {rendaPresumida.TEXTO}</p>
@@ -812,7 +841,7 @@ export default function Dashboard() {
                         boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                       }}>
                         <h3 style={{ color: '#1f2937', marginBottom: '10px' }}>
-                          💳 {limiteParcela.DESCRICAONATUREZA}
+                          💳 {'Limite de Parcelas'}
                         </h3>
                         <div style={{ fontSize: '14px', color: '#6b7280' }}>
                           <p><strong>Valor Sugerido:</strong> {limiteParcela.TEXTO}</p>
