@@ -780,7 +780,7 @@ export default function Dashboard() {
                               <strong>Estado Civil:</strong> {estadoCivilMap[identificacao['ESTADOCIVIL']]}
                             </p>
                           )}
-                          {localizacao['NOMELOGRADOURO'] && (
+                          {localizacao && localizacao['NOMELOGRADOURO'] && (
                             <p style={{ margin: '8px 0' }}>
                               <strong>Endereço:</strong>{' '}
                               {localizacao['TIPOLOGRADOURO']}.{' '}
