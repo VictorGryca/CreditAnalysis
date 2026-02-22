@@ -849,13 +849,259 @@ export default function Dashboard() {
                         boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                       }}>
                         <h3 style={{ color: '#1f2937', marginBottom: '10px' }}>
-                          💳 {'Limite de Parcelas'}
+                          💳 {'Limite da Parcela'}
                         </h3>
                         <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                          <p><strong>Valor Sugerido:</strong> {limiteParcela.TEXTO}</p>
+                          <p><strong>Valor Sugerido:</strong> {limiteParcela.SCORE.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                         </div>
                       </div>
                     )}
+
+                    {/* Resumo de Ações Cíveis Card */}
+                    {(() => {
+                      const resumoAcoesCiveis = bodyData?.['SPCA-XML']?.RESPOSTA?.ACERTA?.['RESUMO-DE-ACOES-CIVEIS'];
+                      if (!resumoAcoesCiveis) return null;
+
+                      // Se não há registro válido, mostra que não há dados
+                      if (resumoAcoesCiveis.REGISTRO !== 'S') {
+                        return (
+                          <div style={{
+                            backgroundColor: '#f3f4f6',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '8px',
+                            padding: '20px',
+                            marginBottom: '15px',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                          }}>
+                            <h3 style={{ color: '#6b7280', marginBottom: '10px' }}>
+                              ⚖️ Ações Cíveis
+                            </h3>
+                            <div style={{ fontSize: '14px', color: '#9ca3af' }}>
+                              <p>Sem informações de ações cíveis disponíveis</p>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // Há registro válido - mostra os dados
+                      const quantidade = parseInt(resumoAcoesCiveis.QUANTIDADE) || 0;
+                      
+                      // RELACAO-DE-ACOES-CIVEIS pode ser um objeto único ou array
+                      let acoesCiveis = bodyData?.['SPCA-XML']?.RESPOSTA?.ACERTA?.['RELACAO-DE-ACOES-CIVEIS'];
+                      if (acoesCiveis && !Array.isArray(acoesCiveis)) {
+                        acoesCiveis = [acoesCiveis];
+                      } else if (!acoesCiveis) {
+                        acoesCiveis = [];
+                      }
+                      
+                      return (
+                        <div style={{
+                          backgroundColor: quantidade > 0 ? '#fef3c7' : '#d1fae5',
+                          border: `1px solid ${quantidade > 0 ? '#fbbf24' : '#6ee7b7'}`,
+                          borderRadius: '8px',
+                          padding: '20px',
+                          marginBottom: '15px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                        }}>
+                          <h3 style={{ 
+                            color: quantidade > 0 ? '#92400e' : '#065f46',
+                            marginBottom: '10px' 
+                          }}>
+                            {quantidade > 0 ? '⚠️' : '✅'} Ações Cíveis
+                          </h3>
+                          <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                            <p><strong>Quantidade de Ações:</strong> {quantidade}</p>
+                            {quantidade > 0 && resumoAcoesCiveis.PERIODOINICIAL && resumoAcoesCiveis.PERIODOFINAL && (
+                              <p><strong>Período:</strong> {resumoAcoesCiveis.PERIODOINICIAL} a {resumoAcoesCiveis.PERIODOFINAL}</p>
+                            )}
+                            
+                            {/* Detalhes das Ações Cíveis (Expandível) */}
+                            {quantidade > 0 && Array.isArray(acoesCiveis) && acoesCiveis.length > 0 && (
+                              <details style={{
+                                marginTop: '15px',
+                                padding: '15px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                border: '1px solid #fbbf24',
+                                borderRadius: '8px'
+                              }}>
+                                <summary style={{ 
+                                  cursor: 'pointer', 
+                                  fontWeight: 'bold',
+                                  color: '#92400e',
+                                  marginBottom: '10px'
+                                }}>
+                                  ⚖️ Ver Detalhes das Ações Cíveis ({acoesCiveis.length})
+                                </summary>
+                                <div style={{ 
+                                  marginTop: '15px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '10px'
+                                }}>
+                                  {acoesCiveis.map((acao: any, index: number) => (
+                                    <div 
+                                      key={index}
+                                      style={{
+                                        padding: '12px',
+                                        backgroundColor: 'white',
+                                        borderRadius: '6px',
+                                        border: '1px solid #e5e7eb',
+                                        fontSize: '13px'
+                                      }}
+                                    >
+                                      <p style={{ margin: '5px 0' }}>
+                                        <strong>Autor:</strong> {acao.AUTOR || 'Não informado'}
+                                      </p>
+                                      <p style={{ margin: '5px 0' }}>
+                                        <strong>Valor:</strong> {acao.VALOR ? `R$ ${acao.VALOR}` : 'Não informado'}
+                                      </p>
+                                      <p style={{ margin: '5px 0' }}>
+                                        <strong>Data Distribuição:</strong> {acao.DATADISTRIBUICAO || 'Não informado'}
+                                      </p>
+                                      {acao.PROCESSO && (
+                                        <p style={{ margin: '5px 0', fontSize: '12px', color: '#6b7280' }}>
+                                          Processo: {acao.PROCESSO}
+                                        </p>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </details>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Resumo de Ocorrências de Débitos Card */}
+                    {(() => {
+                      const resumoDebitos = bodyData?.['SPCA-XML']?.RESPOSTA?.ACERTA?.['RESUMO-OCORRENCIAS-DE-DEBITOS'];
+                      if (!resumoDebitos) return null;
+
+                      // Se não há registro válido, mostra que não há dados
+                      if (resumoDebitos.REGISTRO !== 'S') {
+                        return (
+                          <div style={{
+                            backgroundColor: '#f3f4f6',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '8px',
+                            padding: '20px',
+                            marginBottom: '15px',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                          }}>
+                            <h3 style={{ color: '#6b7280', marginBottom: '10px' }}>
+                              💳 Ocorrências de Débitos
+                            </h3>
+                            <div style={{ fontSize: '14px', color: '#9ca3af' }}>
+                              <p>Sem ocorrências de débitos disponíveis</p>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // Há registro válido - mostra os dados
+                      const totalDevedor = parseInt(resumoDebitos.TOTALDEVEDOR) || 0;
+                      
+                      // DEBITOS pode ser um objeto único ou array
+                      let debitos = bodyData?.['SPCA-XML']?.RESPOSTA?.ACERTA?.DEBITOS;
+                      if (debitos && !Array.isArray(debitos)) {
+                        debitos = [debitos];
+                      } else if (!debitos) {
+                        debitos = [];
+                      }
+                      
+                      return (
+                        <div style={{
+                          backgroundColor: totalDevedor > 0 ? '#fee2e2' : '#d1fae5',
+                          border: `1px solid ${totalDevedor > 0 ? '#fca5a5' : '#6ee7b7'}`,
+                          borderRadius: '8px',
+                          padding: '20px',
+                          marginBottom: '15px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                        }}>
+                          <h3 style={{ 
+                            color: totalDevedor > 0 ? '#991b1b' : '#065f46',
+                            marginBottom: '10px' 
+                          }}>
+                            {totalDevedor > 0 ? '⚠️' : '✅'} Ocorrências de Débitos
+                          </h3>
+                          <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                            <p><strong>Total Devedor:</strong> {totalDevedor}</p>
+                            {totalDevedor > 0 && (
+                              <>
+                                <p><strong>Valor Acumulado:</strong> R$ {resumoDebitos.VALORACOMULADO}</p>
+                                <p><strong>Valor Maior Débito:</strong> R$ {resumoDebitos.VALORMAIORDEBITO}</p>
+                                {resumoDebitos.DATAPRIMEIRODEBITO && (
+                                  <p><strong>Data Primeiro Débito:</strong> {resumoDebitos.DATAPRIMEIRODEBITO}</p>
+                                )}
+                                {resumoDebitos.DATAMAIORDEBITO && (
+                                  <p><strong>Data Maior Débito:</strong> {resumoDebitos.DATAMAIORDEBITO}</p>
+                                )}
+                                
+                                {/* Detalhes dos Débitos (Expandível) */}
+                                {Array.isArray(debitos) && debitos.length > 0 && (
+                                  <details style={{
+                                    marginTop: '15px',
+                                    padding: '15px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                    border: '1px solid #fca5a5',
+                                    borderRadius: '8px'
+                                  }}>
+                                    <summary style={{ 
+                                      cursor: 'pointer', 
+                                      fontWeight: 'bold',
+                                      color: '#991b1b',
+                                      marginBottom: '10px'
+                                    }}>
+                                      📋 Ver Detalhes dos Débitos ({debitos.length})
+                                    </summary>
+                                    <div style={{ 
+                                      marginTop: '15px',
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      gap: '10px'
+                                    }}>
+                                      {debitos.map((debito: any, index: number) => (
+                                        <div 
+                                          key={index}
+                                          style={{
+                                            padding: '12px',
+                                            backgroundColor: 'white',
+                                            borderRadius: '6px',
+                                            border: '1px solid #e5e7eb',
+                                            fontSize: '13px'
+                                          }}
+                                        >
+                                          <p style={{ margin: '5px 0' }}>
+                                            <strong>Informante:</strong> {debito.INFORMANTE || 'Não informado'}
+                                          </p>
+                                          <p style={{ margin: '5px 0' }}>
+                                            <strong>Valor:</strong> R$ {debito.VALOR || '0,00'}
+                                          </p>
+                                          <p style={{ margin: '5px 0' }}>
+                                            <strong>Data Ocorrência:</strong> {debito.DATAOCORRENCIA || 'Não informado'}
+                                          </p>
+                                          {debito.CONTRATO && (
+                                            <p style={{ margin: '5px 0', fontSize: '12px', color: '#6b7280' }}>
+                                              Contrato: {debito.CONTRATO}
+                                            </p>
+                                          )}
+                                          {debito.SEGMENTO && (
+                                            <p style={{ margin: '5px 0', fontSize: '12px', color: '#6b7280' }}>
+                                              Segmento: {debito.SEGMENTO}
+                                            </p>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </details>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* Resumo de Títulos Protestados Card */}
                     {(() => {
@@ -913,6 +1159,7 @@ export default function Dashboard() {
                       );
                     })()}
 
+                    
                     {/* Decisão API Card */}
                     {decisao && (
                       <div style={{
