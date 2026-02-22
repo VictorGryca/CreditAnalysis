@@ -186,7 +186,8 @@ export default function ConsultaCredito() {
       const response = await fetch(import.meta.env.VITE_SCPC_API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'x-api-key': import.meta.env.VITE_API_GATEWAY_KEY
         },
         body: JSON.stringify(body)
       })

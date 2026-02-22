@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_COGNITO_CLIENT_ID: string
   readonly VITE_COGNITO_REGION: string
   readonly VITE_SCPC_API_URL: string
+  readonly VITE_API_GATEWAY_KEY: string
 }
 
 interface ImportMeta {
