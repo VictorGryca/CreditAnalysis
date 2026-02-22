@@ -725,6 +725,11 @@ export default function Dashboard() {
                   <p style={{ margin: '5px 0', fontSize: '14px', color: '#6b7280' }}>
                     Valor Total: {req.valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </p>
+                  <p style={{ fontSize: '12px', color: '#9ca3af' }}>
+                    Aluguel: {req.aluguel.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} | 
+                    Condomínio: {req.condominio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} | 
+                    Seguro: {req.seguro.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </p>
                   {req.numeroResposta && (
                     <p style={{ margin: '5px 0', fontSize: '12px', color: '#9ca3af' }}>
                       Nº Resposta: {req.numeroResposta}

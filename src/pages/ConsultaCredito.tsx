@@ -350,6 +350,7 @@ export default function ConsultaCredito() {
                 }}>
                   <p><strong>CPF:</strong> {cpf}</p>
                   <p><strong>Valor Total do Imóvel:</strong> {totalImovel.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                  
                   <p><strong>Renda Média Estimada:</strong> {rendaMedia.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                   <p><strong></strong> {dados.decisao?.TEXTO}</p>
                   <p style={{ marginTop: '15px', fontStyle: 'italic', fontSize: '14px' }}>
