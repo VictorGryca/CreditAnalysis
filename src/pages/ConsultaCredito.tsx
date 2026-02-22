@@ -75,7 +75,7 @@ export default function ConsultaCredito() {
   }
 
   const extrairDadosFormatados = (data: any): ResultadoFormatado => {
-    // O body agora está parseado, então podemos acessar diretamente
+    
     const bodyData = data?.body || data
     
     // Navegando pelo caminho: SPCA-XML/RESPOSTA/ACERTA
@@ -304,7 +304,7 @@ export default function ConsultaCredito() {
           const resultadoParsed = parseJsonRecursive(resultado)
           const dados = extrairDadosFormatados(resultadoParsed)
           
-          // Usar apenas APROVA da API para decisão
+          // Usa apenas APROVA da API para decisão
           const aprovaAPI = dados.decisao?.APROVA || 'N'
           const creditoAprovado = aprovaAPI === 'S'
           const creditoCautela = aprovaAPI === 'C' 
